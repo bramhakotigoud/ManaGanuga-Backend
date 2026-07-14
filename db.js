@@ -1,11 +1,12 @@
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  user: "apfdcllp",
-  host: "localhost",
-  database: "ManaGanugaApp",
-  password: "",
-  port: 5432,
+  user: "postgres",
+  host: "postgres.railway.internal",
+  database: "railway",
+  password: "KmdmiOsUvmIinKBWFpfChsubtwdlmTeV",
+  port: 5342,
+  ssl: false,
 });
 
 module.exports = pool;
