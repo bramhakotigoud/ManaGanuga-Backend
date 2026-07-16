@@ -1,17 +1,12 @@
-const pool = require("../config/db");
+const Subscription = require("../models/Subscription");
 
 const getSubscriptionPlans = async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT *
-      FROM subscription_plans
-      WHERE is_active = TRUE
-      ORDER BY display_order ASC
-    `);
+    const plans = await Subscription.getPlans();
 
     res.status(200).json({
       success: true,
-      plans: result.rows,
+      plans,
     });
   } catch (error) {
     console.error("Subscription Plans Error:", error);
