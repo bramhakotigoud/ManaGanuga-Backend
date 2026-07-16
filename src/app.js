@@ -10,6 +10,7 @@ const app = express();
 const addressRoutes = require("./routes/addressRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
 app.use(cors());
 app.use(express.json());
 
@@ -19,5 +20,6 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
 
 module.exports = app;
