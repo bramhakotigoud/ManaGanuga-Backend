@@ -2,8 +2,8 @@ const pool = require("../../db");
 
 const createPayment = async (data) => {
   const result = await pool.query(
-    `INSERT INTO payments (order_id, payment_gateway, amount, status, gateway_order_id, gateway_payment_id)
-     VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+    `INSERT INTO payments (order_id, payment_gateway, amount, status, gateway_order_id, gateway_payment_id, payment_type, membership_plan_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
     [
       data.order_id,
       data.payment_gateway,
@@ -11,6 +11,8 @@ const createPayment = async (data) => {
       data.status || "PENDING",
       data.gateway_order_id || null,
       data.gateway_payment_id || null,
+      data.payment_type || "ORDER",
+      data.membership_plan_id || null,
     ],
   );
 
