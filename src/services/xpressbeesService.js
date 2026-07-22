@@ -42,7 +42,7 @@ const createShipment = async ({ order, address, warehouse }) => {
   const payload = {
     order_number: String(order.id),
     payment_type: "prepaid",
-    order_total: Number(order.total_amount),
+    order_amount: Number(order.total_amount),
     collectable_amount: 0,
 
     consignee: {

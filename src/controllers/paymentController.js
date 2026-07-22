@@ -164,9 +164,10 @@ if (!order) {
     console.log(JSON.stringify({
       order_number: String(order.id),
       payment_type: "prepaid",
-      order_total: Number(order.total_amount),
-   }, null, 2));
-   console.log("========================================");
+      order_amount: Number(order.total_amount),
+      collectable_amount: 0,
+    }, null, 2));
+    console.log("========================================");
 
   const warehouseResult = await pool.query(
   `
