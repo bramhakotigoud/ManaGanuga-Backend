@@ -36,12 +36,52 @@ const login = async () => {
 
   return token;
 };
-const createShipment = async (shipmentPayload) => {
+const createShipment = async ({ order, address, warehouse }) => {
   const jwt = await login();
+
+  const payload = {
+    order_number: String(order.id),
+    payment_type: "prepaid",
+    order_total: Number(order.total_amount),
+    collectable_amount: 0,
+
+    consignee: {
+      name: address.full_name,
+      address: address.address_line1,
+      address_2: address.address_line2 || "",
+      city: address.city,
+      state: address.state,
+      pincode: address.postal_code,
+      phone: address.phone,
+    },
+
+    pickup: {
+      warehouse_name: warehouse.name,
+      name: warehouse.contact_name,
+      address: warehouse.address,
+      address_2: "",
+      city: warehouse.city,
+      state: warehouse.state,
+      pincode: warehouse.pincode,
+      phone: warehouse.phone,
+    },
+
+    order_items: [
+      {
+        name: "Order #" + order.id,
+        qty: 1,
+        price: Number(order.total_amount),
+        sku: "ORDER-" + order.id,
+      },
+    ],
+  };
+
+  console.log("========== XPRESSBEES REQUEST ==========");
+  console.log(JSON.stringify(payload, null, 2));
 
   const response = await axios.post(
     `${BASE_URL}/shipments2`,
-    shipmentPayload,
+    payload,
     {
       headers: {
         Authorization: `Bearer ${jwt}`,
@@ -52,7 +92,6 @@ const createShipment = async (shipmentPayload) => {
 
   console.log("========== XPRESSBEES RESPONSE ==========");
   console.log(JSON.stringify(response.data, null, 2));
-  console.log("=========================================");
 
   return response.data;
 };

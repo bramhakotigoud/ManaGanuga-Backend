@@ -167,45 +167,21 @@ if (!order) {
       order_total: Number(order.total_amount),
    }, null, 2));
    console.log("========================================");
-    shipment = await xpressbeesService.createShipment({
-  order_number: String(order.id),
 
-  payment_type: "prepaid",
+  const warehouseResult = await pool.query(
+  `
+  SELECT *
+  FROM warehouses
+  WHERE id = 1
+  `
+);
 
-  order_total: Number(order.total_amount),
+const warehouse = warehouseResult.rows[0];
 
-  collectable_amount: 0,
-
-  consignee_name: address.full_name,
-  consignee_address: address.address_line1,
-  consignee_address2: address.address_line2 || "",
-  consignee_city: address.city,
-  consignee_state: address.state,
-  consignee_pincode: address.postal_code,
-  consignee_phone: address.phone,
-
-  pickup_warehouse_name: "ManaGanuga",
-
-  pickup_contact_name: "ManaGanuga",
-
-  pickup_address: "YOUR WAREHOUSE ADDRESS",
-
-  pickup_city: "YOUR CITY",
-
-  pickup_state: "YOUR STATE",
-
-  pickup_pincode: "YOUR PINCODE",
-
-  pickup_phone: "YOUR PHONE",
-
-  order_items: [
-  {
-    name: "Order #" + order.id,
-    qty: 1,
-    price: Number(order.total_amount),
-    sku: "ORDER-" + order.id,
-  },
-],
+shipment = await xpressbeesService.createShipment({
+  order,
+  address,
+  warehouse,
 });
 
     console.log(
