@@ -127,7 +127,7 @@
 
     order = await Order.createBuyNowOrder(
       "USER",
-      2,
+      1,
       req.body.productId,
       req.body.quantity || 1,
     );
@@ -136,7 +136,7 @@
 
     order = await Order.createOrder(
       "USER",
-      2,
+      1,
     );
     console.log("ORDER RETURNED:", order);
 
@@ -148,7 +148,7 @@ if (!order) {
 }
 
   }
-  const address = await Address.getDefaultAddress("USER", 2);
+  const address = await Address.getDefaultAddress("USER", 1);
 
   if (!address) {
     return res.status(400).json({
