@@ -285,6 +285,22 @@ const deleteOrder = async (id) => {
 
   return result.rows[0];
 };
+const shipOrder = async (orderId, trackingNumber, courierName) => {
+  const result = await pool.query(
+    `
+    UPDATE orders
+    SET
+      tracking_number = $2,
+      courier_name = $3,
+      status = 'PROCESSING'
+    WHERE id = $1
+    RETURNING *;
+    `,
+    [orderId, trackingNumber, courierName]
+  );
+
+  return result.rows[0];
+};
 
 module.exports = {
   createOrder,
@@ -295,4 +311,5 @@ module.exports = {
   getOrderItems,
   updateOrder,
   deleteOrder,
+  shipOrder,
 };

@@ -2,7 +2,9 @@ const Order = require("../models/Order");
 const Payment = require("../models/Payment");
 const razorpayService = require("../services/razorpayService");
 const Membership = require("../models/Membership");
-const pool = require("../config/db");
+const pool = require("../../db");
+const xpressbeesService = require("../services/xpressbeesService");
+const Address = require("../models/Address");
 
 /* CREATE ORDER */
 const createOrder = async (req, res) => {
@@ -138,12 +140,74 @@ if (req.body.buyNow) {
   );
 
 }
+const address = await Address.getDefaultAddress("USER", 1);
+
+if (!address) {
+  return res.status(400).json({
+    success: false,
+    message: "Default delivery address not found.",
+  });
+}
+
+let shipment;
+
+try {
+  shipment = await xpressbeesService.createShipment({
+    order_number: order.id,
+    payment_type: "Prepaid",
+    amount: order.total_amount,
+
+    customer_name: address.full_name,
+    customer_phone: address.phone,
+    address: `${address.address_line1} ${address.address_line2 || ""}`,
+    city: address.city,
+    state: address.state,
+    pincode: address.postal_code,
+  });
+
+  console.log(
+    "XPRESSBEES RESPONSE:",
+    JSON.stringify(shipment, null, 2),
+  );
+  if (!shipment) {
+  return res.status(500).json({
+    success: false,
+    message: "Shipment creation failed.",
+  });
+}
+
+const trackingNumber =
+  shipment.data?.awb_number ||
+  shipment.awb_number ||
+  shipment.awb ||
+  null;
+
+if (trackingNumber) {
+  await Order.shipOrder(
+    order.id,
+    trackingNumber,
+    "Xpressbees",
+  );
+} else {
+  console.log("AWB number not found in Xpressbees response.");
+}
+} catch (e) {
+  console.error("========== XPRESSBEES ERROR ==========");
+  console.error("Status:", e.response?.status);
+  console.error(
+    "Response:",
+    JSON.stringify(e.response?.data, null, 2),
+  );
+  console.error("Message:", e.message);
+  console.error("======================================");
+}
 
     res.json({ 
       success: true,
        data: {
         payment,
         order,
+        shipment,
        },
        });
   } catch (err) {

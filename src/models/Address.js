@@ -103,9 +103,24 @@ const deleteAddress = async (id) => {
 
   return result.rows[0];
 };
+const getDefaultAddress = async (entity_type, entity_id) => {
+  const query = `
+    SELECT *
+    FROM addresses
+    WHERE entity_type = $1
+      AND entity_id = $2
+      AND is_default = true
+    LIMIT 1;
+  `;
+
+  const result = await pool.query(query, [entity_type, entity_id]);
+
+  return result.rows[0];
+};
 module.exports = {
   createAddress,
   getAddresses,
   updateAddress,
   deleteAddress,
+  getDefaultAddress,
 };
