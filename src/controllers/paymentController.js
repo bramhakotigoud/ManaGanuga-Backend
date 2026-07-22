@@ -138,6 +138,14 @@
       "USER",
       2,
     );
+    console.log("ORDER RETURNED:", order);
+
+if (!order) {
+  return res.status(400).json({
+    success: false,
+    message: "Order.createOrder() returned null",
+  });
+}
 
   }
   const address = await Address.getDefaultAddress("USER", 2);
@@ -272,4 +280,5 @@
     createOrder,
     verifyPayment,
     getPayments,
+
   };

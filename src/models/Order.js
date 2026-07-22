@@ -28,6 +28,8 @@ const createOrder = async (
   );
 
   let cartItems = cartResult.rows;
+  console.log("Cart row count:", cartResult.rowCount);
+  console.log("Cart items:", cartResult.rows);
 
 if (buyNow) {
   const productResult = await pool.query(
@@ -56,6 +58,7 @@ if (buyNow) {
   if (cartResult.rowCount === 0) {
     return null;
   }
+
 }
 
   // Calculate total
