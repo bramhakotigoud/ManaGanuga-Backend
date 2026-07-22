@@ -56,3 +56,7 @@ const createShipment = async (shipmentPayload) => {
 
   return response.data;
 };
+module.exports = {
+  login,
+  createShipment,
+};
