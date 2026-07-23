@@ -99,7 +99,7 @@ const trackShipment = async (awb) => {
   const token = await login();
 
   const response = await axios.get(
-    `${BASE_URL}/shipments2/${awb}`,
+    `${BASE_URL}/shipments2/track/${awb}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -115,3 +115,4 @@ module.exports = {
   createShipment,
   trackShipment,
 };
+
