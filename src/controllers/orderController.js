@@ -161,13 +161,14 @@ const trackOrder = async (req, res) => {
     );
 
     res.json(tracking);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: "Tracking failed",
-    });
-  }
+ } catch (err) {
+  console.error("Tracking Error:", err.response?.data || err.message);
+
+  res.status(500).json({
+    success: false,
+    message: err.response?.data || err.message,
+  });
+}
 }
 
 module.exports = {
