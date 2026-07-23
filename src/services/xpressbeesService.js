@@ -99,7 +99,7 @@ const trackShipment = async (awb) => {
   const token = await login();
 
   const response = await axios.get(
-    `${process.env.XPRESSBEES_BASE_URL}/shipments2/track/${awb}`,
+    `${BASE_URL}/shipments2/${awb}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
