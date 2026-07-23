@@ -6,6 +6,7 @@ const createOrder = async (req, res) => {
     const {
       entity_type,
       entity_id,
+      address_id,
       buyNow,
       productId,
       quantity,
@@ -14,6 +15,7 @@ const createOrder = async (req, res) => {
     const order = await Order.createOrder(
       entity_type,
       entity_id,
+      address_id,
       buyNow,
       productId,
       quantity

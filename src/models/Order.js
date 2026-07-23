@@ -7,6 +7,7 @@ const xpressbeesService = require("../services/xpressbeesService");
 const createOrder = async (
   entity_type,
   entity_id,
+  address_id,
   buyNow = false,
   productId = null,
   quantity = 1,
@@ -74,12 +75,13 @@ if (buyNow) {
     INSERT INTO orders(
       entity_type,
       entity_id,
+      address_id,
       total_amount
     )
-    VALUES($1,$2,$3)
+    VALUES($1,$2,$3,$4)
     RETURNING *
     `,
-    [entity_type, entity_id, totalAmount],
+    [entity_type, entity_id, address_id, totalAmount],
   );
 
   const order = orderResult.rows[0];
@@ -116,6 +118,7 @@ return order;
 const createBuyNowOrder = async (
   entity_type,
   entity_id,
+  address_id,
   productId,
   quantity = 1,
 ) => {
@@ -141,12 +144,13 @@ const createBuyNowOrder = async (
     INSERT INTO orders(
       entity_type,
       entity_id,
+      address_id,
       total_amount
     )
-    VALUES($1,$2,$3)
+    VALUES($1,$2,$3,$4)
     RETURNING *
     `,
-    [entity_type, entity_id, totalAmount],
+    [entity_type, entity_id, address_id, totalAmount],
   );
 
   const order = orderResult.rows[0];
@@ -193,11 +197,22 @@ const getOrders = async () => {
 const getOrderById = async (id) => {
   const result = await pool.query(
     `
-    SELECT *
-    FROM orders
-    WHERE id = $1
+    SELECT
+      o.*,
+      a.full_name,
+      a.phone,
+      a.address_line1,
+      a.address_line2,
+      a.city,
+      a.state,
+      a.country,
+      a.postal_code
+    FROM orders o
+    LEFT JOIN addresses a
+      ON a.id = o.address_id
+    WHERE o.id = $1
     `,
-    [id],
+    [id]
   );
 
   return result.rows[0];
@@ -235,6 +250,7 @@ const getOrderItems = async (orderId) => {
       oi.id,
       oi.item_id AS product_id,
       p.name AS product_name,
+      p.image,
       oi.quantity,
       oi.unit_price,
       (oi.quantity * oi.unit_price) AS total_price
