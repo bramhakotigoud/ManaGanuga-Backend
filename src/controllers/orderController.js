@@ -1,5 +1,5 @@
 const Order = require("../models/Order");
-
+const xpressbeesService = require("../services/xpressbeesService");
 const createOrder = async (req, res) => {
   console.log("ORDER BODY:", req.body);
   try {
@@ -9,7 +9,8 @@ const createOrder = async (req, res) => {
       buyNow,
       productId,
       quantity,
-      } = req.body;
+      tracking_number
+    } = req.body;
     const order = await Order.createOrder(
       entity_type,
       entity_id,
@@ -135,6 +136,39 @@ const deleteOrder = async (req, res) => {
     });
   }
 };
+const trackOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const order = await Order.getOrderById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (!order.tracking_number) {
+      return res.status(400).json({
+        success: false,
+        message: "Tracking number not available",
+      });
+    }
+
+    const tracking = await xpressbeesService.trackShipment(
+      order.tracking_number
+    );
+
+    res.json(tracking);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Tracking failed",
+    });
+  }
+}
 
 module.exports = {
   createOrder,
@@ -143,4 +177,5 @@ module.exports = {
   getOrderItems,
   updateOrder,
   deleteOrder,
+  trackOrder,
 };

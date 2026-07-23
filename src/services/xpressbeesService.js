@@ -95,7 +95,23 @@ const createShipment = async ({ order, address, warehouse }) => {
 
   return response.data;
 };
+const trackShipment = async (awb) => {
+  const token = await login();
+
+  const response = await axios.get(
+    `${process.env.XPRESSBEES_BASE_URL}/shipments2/track/${awb}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
 module.exports = {
   login,
   createShipment,
+  trackShipment,
 };
