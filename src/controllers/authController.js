@@ -10,6 +10,15 @@ exports.sendOtp = async (req, res) => {
 
   try {
     const { mobile } = req.body;
+    const loginUser = await UserLogin.findByMobile(mobile);
+
+if (loginUser) {
+  return res.status(200).json({
+    success: true,
+    existingUser: true,
+    message: "Please login with your password.",
+  });
+}
 
     if (!mobile) {
       return res.status(400).json({ message: "Mobile required" });
@@ -44,6 +53,60 @@ exports.verifyOtp = async (req, res) => {
    if (!user) {
   user = await User.create({ mobile });
 }
+// LOGIN WITH PASSWORD
+exports.loginWithPassword = async (req, res) => {
+  console.log("PASSWORD LOGIN ROUTE HIT");
+  console.log("BODY:", req.body);
+
+  try {
+    const { mobile, password } = req.body;
+
+    if (!mobile || !password) {
+      return res.status(400).json({
+        message: "Mobile and password are required",
+      });
+    }
+
+    // Find login record
+    const loginUser = await UserLogin.findByMobile(mobile);
+
+    if (!loginUser) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // Verify password
+    if (loginUser.password !== password) {
+      return res.status(401).json({
+        message: "Invalid password",
+      });
+    }
+
+    // Get user details
+    const user = await User.findOne({ mobile });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // Generate JWT
+    const token = generateToken(user);
+
+    res.json({
+      message: "Login successful",
+      token,
+      user,
+    });
+  } catch (err) {
+    console.log("PASSWORD LOGIN ERROR:", err);
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
 
 const loginUser = await UserLogin.findByUserId(user.id);
 

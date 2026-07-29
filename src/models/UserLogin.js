@@ -9,6 +9,15 @@ const UserLogin = {
     return result.rows[0];
   },
 
+  async findByMobile(mobile) {
+  const result = await pool.query(
+    `SELECT * FROM user_login WHERE mobile_no = $1 LIMIT 1`,
+    [mobile]
+  );
+
+  return result.rows[0];
+},
+
   async create(user, password) {
     const result = await pool.query(
       `
