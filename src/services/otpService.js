@@ -17,7 +17,11 @@ const sendOtp = async (mobile) => {
   });
 
   const message = `Use OTP ${otp} to complete your login to ManaGanuga. Do not share this code.`;
-  await sendSMS(mobile, message);
+  await sendSMS(
+  mobile,
+  message,
+  process.env.SMS_TEMPLATE_ID
+);
 
   return true;
 };

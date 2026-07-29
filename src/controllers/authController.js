@@ -2,6 +2,7 @@ const { sendOtp, verifyOtp } = require("../services/otpService");
 const User = require("../models/User");
 const UserLogin = require("../models/UserLogin");
 const generateToken = require("../utils/generateToken");
+const { sendSMS } = require("../services/smsService");
 
 // SEND OTP
 exports.sendOtp = async (req, res) => {
@@ -63,6 +64,20 @@ if (!loginUser) {
 
   await UserLogin.create(user, randomPassword);
 
+  // Send password SMS (only if template ID is configured)
+  const passwordMessage = `Welcome to Mana Ganuga.
+Your login password is ${randomPassword}.
+Please keep it secure.`;
+
+  if (process.env.SMS_PASSWORD_TEMPLATE_ID) {
+    await sendSMS(
+      mobile,
+      passwordMessage,
+      process.env.SMS_PASSWORD_TEMPLATE_ID
+    );
+  } else {
+    console.log("SMS_PASSWORD_TEMPLATE_ID not configured. Skipping password SMS.");
+  }
 }
     const token = generateToken(user);
 
