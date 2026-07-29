@@ -9,7 +9,7 @@ const UserLogin = {
     return result.rows[0];
   },
 
-  async create(user) {
+  async create(user, password) {
     const result = await pool.query(
       `
       INSERT INTO user_login
@@ -26,12 +26,12 @@ const UserLogin = {
       RETURNING *
       `,
       [
-        user.id,
-        user.mobile,
-        user.mobile,
-        "",
-        "USER",
-      ]
+  user.id,
+  user.mobile,
+  user.mobile,
+  password,
+  "USER",
+]
     );
 
     return result.rows[0];

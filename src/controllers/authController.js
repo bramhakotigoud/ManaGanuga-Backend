@@ -41,13 +41,19 @@ exports.verifyOtp = async (req, res) => {
 
     let user = await User.findOne({ mobile });
 
-    if (!user) {
-      user = await User.create({ mobile });
-    }
+   if (!user) {
+  user = await User.create({ mobile });
+}
+
 const loginUser = await UserLogin.findByUserId(user.id);
 
 if (!loginUser) {
-  await UserLogin.create(user);
+
+  // Generate 8-character password
+  const randomPassword = Math.random().toString(36).slice(-8).toUpperCase();
+
+  await UserLogin.create(user, randomPassword);
+
 }
     const token = generateToken(user);
 
