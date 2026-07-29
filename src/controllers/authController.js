@@ -1,5 +1,6 @@
 const { sendOtp, verifyOtp } = require("../services/otpService");
 const User = require("../models/User");
+const UserLogin = require("../models/UserLogin");
 const generateToken = require("../utils/generateToken");
 
 // SEND OTP
@@ -43,7 +44,11 @@ exports.verifyOtp = async (req, res) => {
     if (!user) {
       user = await User.create({ mobile });
     }
+const loginUser = await UserLogin.findByUserId(user.id);
 
+if (!loginUser) {
+  await UserLogin.create(user);
+}
     const token = generateToken(user);
 
     res.json({
