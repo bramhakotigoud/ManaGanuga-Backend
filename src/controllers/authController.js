@@ -53,6 +53,29 @@ exports.verifyOtp = async (req, res) => {
    if (!user) {
   user = await User.create({ mobile });
 }
+
+const loginUser = await UserLogin.findByUserId(user.id);
+
+if (!loginUser) {
+
+  // Generate 8-character password
+  const randomPassword = Math.random().toString(36).slice(-8).toUpperCase();
+
+  await UserLogin.create(user, randomPassword);
+
+}
+    const token = generateToken(user);
+
+    res.json({
+      message: "Login successful",
+      token,
+      user,
+    });
+  } catch (err) {
+    console.log("VERIFY ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
 // LOGIN WITH PASSWORD
 exports.loginWithPassword = async (req, res) => {
   console.log("PASSWORD LOGIN ROUTE HIT");
@@ -83,7 +106,7 @@ exports.loginWithPassword = async (req, res) => {
       });
     }
 
-    // Get user details
+    // Find user
     const user = await User.findOne({ mobile });
 
     if (!user) {
@@ -92,7 +115,7 @@ exports.loginWithPassword = async (req, res) => {
       });
     }
 
-    // Generate JWT
+    // Generate token
     const token = generateToken(user);
 
     res.json({
@@ -105,28 +128,5 @@ exports.loginWithPassword = async (req, res) => {
     res.status(500).json({
       message: err.message,
     });
-  }
-};
-
-const loginUser = await UserLogin.findByUserId(user.id);
-
-if (!loginUser) {
-
-  // Generate 8-character password
-  const randomPassword = Math.random().toString(36).slice(-8).toUpperCase();
-
-  await UserLogin.create(user, randomPassword);
-
-}
-    const token = generateToken(user);
-
-    res.json({
-      message: "Login successful",
-      token,
-      user,
-    });
-  } catch (err) {
-    console.log("VERIFY ERROR:", err);
-    res.status(500).json({ message: err.message });
   }
 };
