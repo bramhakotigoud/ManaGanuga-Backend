@@ -61,6 +61,7 @@
         razorpay_signature,
         paymentType,
         membershipPlanId,
+        userId,
         } =req.body;
 
       const isValid = razorpayService.verifyPaymentSignature(
@@ -105,7 +106,7 @@
     expiryDate.setFullYear(expiryDate.getFullYear() + 1);
 
     const membership = await Membership.createMembership({
-      userId: 1, // Replace with logged-in user later
+      userId,
       planId: plan.id,
       paymentId: payment.id,
       walletBalance: plan.wallet_bonus,
