@@ -42,10 +42,24 @@ const createMembership = async ({
 const getActiveMembership = async (userId) => {
   const result = await pool.query(
     `
-    SELECT *
-    FROM user_memberships
-    WHERE user_id=$1
-    AND status='ACTIVE'
+    SELECT
+      um.*,
+      sp.plan_name,
+      sp.plan_price,
+      sp.wallet_bonus,
+      sp.discount_percentage,
+      sp.monthly_claim,
+      sp.eligible_bottles,
+      sp.validity_months
+    FROM user_memberships um
+
+    INNER JOIN subscription_plans sp
+      ON sp.id = um.plan_id
+
+    WHERE
+      um.user_id = $1
+      AND um.status = 'ACTIVE'
+
     LIMIT 1
     `,
     [userId]
