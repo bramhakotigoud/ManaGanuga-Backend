@@ -87,13 +87,12 @@ await razorpayService.createRazorpayOrder(
       });
 
       
-      return res.status(201).json({
+     return res.status(201).json({
   success: true,
   data: {
     payment,
     razorpayOrder,
     key: process.env.RAZORPAY_KEY_ID,
-    membershipBenefits: benefits,
     payableAmount: finalAmount,
   },
 });
