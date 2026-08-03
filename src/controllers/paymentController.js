@@ -5,7 +5,17 @@
   const pool = require("../../db");
   const xpressbeesService = require("../services/xpressbeesService");
   const Address = require("../models/Address");
+  const Cart = require("../models/Cart");
+  const Cart = require("../models/Cart");
 
+const {
+  calculateMembershipBenefits,
+} = require("../services/membershipCheckoutService");
+
+const {
+  calculateMembershipBenefits,
+} = require("../services/membershipCheckoutService");
+ 
   /* CREATE ORDER */
   const createOrder = async (req, res) => {
     try {
@@ -18,30 +28,81 @@
         paymentType,
         membershipPlanId,
         } = req.body;
+        let finalAmount = amount;
+
+if (paymentType !== "MEMBERSHIP") {
+
+  const {
+  order_id,
+  amount,
+  entity_id,
+  paymentType,
+  membershipPlanId,
+} = req.body;
+
+let finalAmount = amount;
+let benefits = null;
+
+if (paymentType !== "MEMBERSHIP") {
+
+  const cartItems = await Cart.getItems(
+    "USER",
+    entity_id,
+  );
+
+  benefits =
+    await calculateMembershipBenefits(
+      entity_id,
+      cartItems,
+    );
+
+  if (benefits) {
+    finalAmount = benefits.payableAmount;
+  }
+
+}
+
+  if (benefits) {
+
+    finalAmount =
+      benefits.payableAmount;
+
+    console.log(
+      "Membership Benefits:",
+      benefits,
+    );
+
+  }
+
+}
 
       console.log("AMOUNT:", amount);
 
-      const razorpayOrder = await razorpayService.createRazorpayOrder(amount);
-
+      const razorpayOrder =
+await razorpayService.createRazorpayOrder(
+    finalAmount
+);
       const payment = await Payment.createPayment({
         order_id,
         payment_gateway: "RAZORPAY",
-        amount,
+        amount: finalAmount,
         status: "PENDING",
         gateway_order_id: razorpayOrder.id,
         payment_type: paymentType || "ORDER",
       membership_plan_id: membershipPlanId || null,
       });
 
-
+      
       return res.status(201).json({
-        success: true,
-        data: { 
-          payment,
-          razorpayOrder,
-          key: process.env.RAZORPAY_KEY_ID,
-        },
-      });
+  success: true,
+  data: {
+    payment,
+    razorpayOrder,
+    key: process.env.RAZORPAY_KEY_ID,
+    membershipBenefits: benefits,
+    payableAmount: finalAmount,
+  },
+});
     } catch (err) {
       console.log("CREATE ORDER ERROR:", err);
 
@@ -80,6 +141,26 @@
         status: "PAID",
         gateway_payment_id: razorpay_payment_id,
       });
+
+      await Membership.checkAndResetMonthlyBenefits(
+  userId,
+);
+      let membershipBenefits = null;
+
+if (paymentType !== "MEMBERSHIP") {
+
+  const cartItems = await Cart.getItems(
+    "USER",
+    userId,
+  );
+
+  membershipBenefits =
+    await calculateMembershipBenefits(
+      userId,
+      cartItems,
+    );
+
+}
       let order;
 
   if (paymentType === "MEMBERSHIP") {
@@ -179,7 +260,23 @@ if (!order) {
 );
 
 const warehouse = warehouseResult.rows[0];
+if (
+  membershipBenefits
+) {
 
+  await Membership.updateMembershipUsage({
+
+    userId,
+
+    litresUsed:
+      membershipBenefits.totalLitres,
+
+    walletUsed:
+      membershipBenefits.walletClaim,
+
+  });
+
+}
 shipment = await xpressbeesService.createShipment({
   order,
   address,
@@ -253,10 +350,50 @@ shipment = await xpressbeesService.createShipment({
       res.status(500).json({ success: false, message: err.message });
     }
   };
+  const checkoutSummary = async (req, res) => {
+
+  try {
+
+    const { entity_id } = req.body;
+
+    const cartItems =
+      await Cart.getItems(
+        "USER",
+        entity_id,
+      );
+
+    const benefits =
+      await calculateMembershipBenefits(
+        entity_id,
+        cartItems,
+      );
+
+    return res.json({
+
+      success: true,
+
+      membershipBenefits: benefits,
+
+    });
+
+  } catch (err) {
+
+    return res.status(500).json({
+
+      success: false,
+
+      message: err.message,
+
+    });
+
+  }
+
+};
 
   module.exports = {
     createOrder,
     verifyPayment,
     getPayments,
+    checkoutSummary,
 
   };

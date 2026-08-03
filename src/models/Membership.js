@@ -67,8 +67,112 @@ const getActiveMembership = async (userId) => {
 
   return result.rows[0];
 };
+const updateMembershipUsage = async ({
+  userId,
+  litresUsed,
+  walletUsed,
+}) => {
+
+  const result = await pool.query(
+    `
+    UPDATE user_memberships
+
+    SET
+
+      used_litres =
+        used_litres + $1,
+
+      monthly_claim_used =
+        monthly_claim_used + $2,
+
+      wallet_balance =
+        wallet_balance - $2,
+
+      updated_at = NOW()
+
+    WHERE
+
+      user_id = $3
+
+      AND status='ACTIVE'
+
+    RETURNING *;
+    `,
+    [
+      litresUsed,
+      walletUsed,
+      userId,
+    ]
+  );
+
+  return result.rows[0];
+
+};
+const resetMonthlyBenefits = async (
+  membershipId,
+) => {
+
+  const result = await pool.query(
+    `
+    UPDATE user_memberships
+
+    SET
+
+      used_litres = 0,
+
+      monthly_claim_used = 0,
+
+      last_reset_date = CURRENT_DATE,
+
+      updated_at = NOW()
+
+    WHERE id = $1
+
+    RETURNING *;
+    `,
+    [membershipId]
+  );
+
+  return result.rows[0];
+
+};
+  const checkAndResetMonthlyBenefits =
+async (userId) => {
+
+  const membership =
+    await getActiveMembership(userId);
+
+  if (!membership) {
+    return null;
+  }
+
+  const today = new Date();
+
+  const lastReset =
+    new Date(membership.last_reset_date);
+
+  const monthChanged =
+
+    today.getMonth() !== lastReset.getMonth()
+
+    ||
+
+    today.getFullYear() !== lastReset.getFullYear();
+
+  if (!monthChanged) {
+    return membership;
+  }
+
+  return await resetMonthlyBenefits(
+    membership.id,
+  );
+
+};
 
 module.exports = {
   createMembership,
   getActiveMembership,
+  updateMembershipUsage,
+  resetMonthlyBenefits,
+  checkAndResetMonthlyBenefits,
 };
