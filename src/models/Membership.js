@@ -49,7 +49,7 @@ const getActiveMembership = async (userId) => {
       sp.wallet_bonus,
       sp.discount_percentage,
       sp.monthly_claim,
-      sp.eligible_bottles,
+      sp.monthly_limit_litres,
       sp.validity_months
     FROM user_memberships um
 
