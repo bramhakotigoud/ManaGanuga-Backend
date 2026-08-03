@@ -12,100 +12,121 @@ const {
  
   /* CREATE ORDER */
   const createOrder = async (req, res) => {
-    try {
-      console.log("CREATE ORDER HIT");
-      console.log("BODY:", req.body);
+  try {
 
-      const {
-        order_id,
-        amount,
-        paymentType,
-        membershipPlanId,
-        } = req.body;
-        let finalAmount = amount;
+    console.log("CREATE ORDER HIT");
+    console.log("BODY:", req.body);
 
-if (paymentType !== "MEMBERSHIP") {
-
-  const {
-  order_id,
-  amount,
-  entity_id,
-  paymentType,
-  membershipPlanId,
-} = req.body;
-
-let finalAmount = amount;
-let benefits = null;
-
-if (paymentType !== "MEMBERSHIP") {
-
-  const cartItems = await Cart.getItems(
-    "USER",
-    entity_id,
-  );
-
-  benefits =
-    await calculateMembershipBenefits(
+    const {
+      order_id,
+      amount,
       entity_id,
-      cartItems,
-    );
+      paymentType,
+      membershipPlanId,
+    } = req.body;
 
-  if (benefits) {
-    finalAmount = benefits.payableAmount;
-  }
+    let finalAmount = amount;
 
-}
+    // Membership discount only for normal product orders
+    if (paymentType !== "MEMBERSHIP") {
 
-  if (benefits) {
+      const cartItems = await Cart.getItems(
+        "USER",
+        entity_id,
+      );
 
-    finalAmount =
-      benefits.payableAmount;
+      const benefits =
+        await calculateMembershipBenefits(
+          entity_id,
+          cartItems,
+        );
+
+      if (benefits) {
+
+        finalAmount =
+          benefits.payableAmount;
+
+        console.log(
+          "Membership Benefits:",
+          benefits,
+        );
+
+      }
+
+    }
 
     console.log(
-      "Membership Benefits:",
-      benefits,
+      "Final Amount:",
+      finalAmount,
     );
 
-  }
+    const razorpayOrder =
+      await razorpayService.createRazorpayOrder(
+        finalAmount,
+      );
 
-}
+    const payment =
+      await Payment.createPayment({
 
-      console.log("AMOUNT:", amount);
-
-      const razorpayOrder =
-await razorpayService.createRazorpayOrder(
-    finalAmount
-);
-      const payment = await Payment.createPayment({
         order_id,
+
         payment_gateway: "RAZORPAY",
+
         amount: finalAmount,
+
         status: "PENDING",
-        gateway_order_id: razorpayOrder.id,
-        payment_type: paymentType || "ORDER",
-      membership_plan_id: membershipPlanId || null,
+
+        gateway_order_id:
+          razorpayOrder.id,
+
+        payment_type:
+          paymentType || "ORDER",
+
+        membership_plan_id:
+          membershipPlanId || null,
+
       });
 
-      
-     return res.status(201).json({
-  success: true,
-  data: {
-    payment,
-    razorpayOrder,
-    key: process.env.RAZORPAY_KEY_ID,
-    payableAmount: finalAmount,
-  },
-});
-    } catch (err) {
-      console.log("CREATE ORDER ERROR:", err);
+    return res.status(201).json({
 
-      return res.status(500).json({
-        success: false,
-        message: err.message,
-        stack: err.stack,
-      });
-    }
-  };
+      success: true,
+
+      data: {
+
+        payment,
+
+        razorpayOrder,
+
+        key:
+          process.env.RAZORPAY_KEY_ID,
+
+        payableAmount:
+          finalAmount,
+
+      },
+
+    });
+
+  } catch (err) {
+
+    console.log(
+      "CREATE ORDER ERROR:",
+      err,
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      message: err.message,
+
+      stack: err.stack,
+
+    });
+
+  }
+};
+
   /* VERIFY PAYMENT */
   const verifyPayment = async (req, res) => {
     try {
