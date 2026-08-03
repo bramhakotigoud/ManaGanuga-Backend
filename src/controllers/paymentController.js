@@ -6,12 +6,6 @@
   const xpressbeesService = require("../services/xpressbeesService");
   const Address = require("../models/Address");
   const Cart = require("../models/Cart");
-  const Cart = require("../models/Cart");
-
-const {
-  calculateMembershipBenefits,
-} = require("../services/membershipCheckoutService");
-
 const {
   calculateMembershipBenefits,
 } = require("../services/membershipCheckoutService");
