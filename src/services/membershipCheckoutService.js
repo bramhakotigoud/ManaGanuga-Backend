@@ -167,5 +167,7 @@ return {
   payableAmount,
 
 };
-
+};
+module.exports = {
+  calculateMembershipBenefits,
 };
