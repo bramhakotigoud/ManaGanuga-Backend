@@ -7,16 +7,18 @@ const calculateMembershipBenefits = async (
 
   // Load active membership
   const membershipResult = await pool.query(
-    `
-    SELECT *
-    FROM user_memberships
-    WHERE user_id = $1
+  `
+  SELECT *
+  FROM user_memberships
+  WHERE user_id = $1
     AND status = 'ACTIVE'
-    LIMIT 1
-    `,
-    [userId]
-  );
 
+  ORDER BY id DESC
+
+  LIMIT 1
+  `,
+  [userId]
+);
   const membership = membershipResult.rows[0];
 
   if (!membership) {
