@@ -386,7 +386,10 @@ shipment = await xpressbeesService.createShipment({
 
       success: true,
 
+        cartItems,
+
       membershipBenefits: benefits,
+
 
     });
 
