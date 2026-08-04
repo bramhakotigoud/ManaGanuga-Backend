@@ -9,6 +9,20 @@ const createMembership = async ({
   monthlyClaim,
   expiryDate,
 }) => {
+  await pool.query(
+  `
+  UPDATE user_memberships
+
+  SET
+    status = 'EXPIRED',
+    updated_at = NOW()
+
+  WHERE
+    user_id = $1
+    AND status = 'ACTIVE'
+  `,
+  [userId]
+);
   const result = await pool.query(
     `
     INSERT INTO user_memberships
@@ -59,6 +73,8 @@ const getActiveMembership = async (userId) => {
     WHERE
       um.user_id = $1
       AND um.status = 'ACTIVE'
+
+    ORDER BY um.id DESC
 
     LIMIT 1
     `,
