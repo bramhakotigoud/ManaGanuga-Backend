@@ -24,11 +24,13 @@ const {
       paymentType,
       membershipPlanId,
     } = req.body;
+    const paymentTypeUpper =
+  (paymentType || "ORDER").toUpperCase();
 
     let finalAmount = amount;
 
     // Membership discount only for normal product orders
-    if (paymentType !== "MEMBERSHIP") {
+    if (paymentTypeUpper !== "MEMBERSHIP") {
 
       const cartItems = await Cart.getItems(
         "USER",
@@ -60,10 +62,15 @@ const {
       finalAmount,
     );
 
-    const razorpayOrder =
-      await razorpayService.createRazorpayOrder(
-        finalAmount,
-      );
+    const razorpayAmount =
+  paymentTypeUpper === "MEMBERSHIP"
+    ? 1
+    : finalAmount;
+
+const razorpayOrder =
+  await razorpayService.createRazorpayOrder(
+    razorpayAmount,
+  );
 
     const payment =
       await Payment.createPayment({
@@ -80,7 +87,7 @@ const {
           razorpayOrder.id,
 
         payment_type:
-          paymentType || "ORDER",
+        paymentTypeUpper,
 
         membership_plan_id:
           membershipPlanId || null,
@@ -161,7 +168,7 @@ const {
 );
       let membershipBenefits = null;
 
-if (paymentType !== "MEMBERSHIP") {
+if ((paymentType || "").toUpperCase() !== "MEMBERSHIP") {
 
   const cartItems = await Cart.getItems(
     "USER",
@@ -177,7 +184,7 @@ if (paymentType !== "MEMBERSHIP") {
 }
       let order;
 
-  if (paymentType === "MEMBERSHIP") {
+  if ((paymentType || "").toUpperCase() === "MEMBERSHIP") {
 
     const planResult = await pool.query(
       `
