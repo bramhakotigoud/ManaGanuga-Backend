@@ -128,16 +128,8 @@ const walletClaim =
     subtotal - membershipDiscount
   );
   // Delivery charge
-let deliveryCharge = 75;
-
-const subtotalAfterDiscounts =
-  subtotal -
-  membershipDiscount -
-  walletClaim;
-
-if (subtotalAfterDiscounts >= 750) {
-  deliveryCharge = 0;
-}
+// Members always get free delivery
+const deliveryCharge = 0;
 const payableAmount =
   subtotal -
   membershipDiscount -
