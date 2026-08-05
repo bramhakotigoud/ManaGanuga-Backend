@@ -18,20 +18,21 @@ const UserLogin = {
   return result.rows[0];
 },
 
-  async create(user, password) {
+  async create(user, password, vendorId) {
     const result = await pool.query(
       `
       INSERT INTO user_login
-      (
-        user_id,
-        username,
-        mobile_no,
-        password,
-        role,
-        is_active
-      )
-      VALUES
-      ($1,$2,$3,$4,$5,true)
+(
+  user_id,
+  username,
+  mobile_no,
+  password,
+  role,
+  created_by,
+  is_active
+)
+VALUES
+($1,$2,$3,$4,$5,$6,true)
       RETURNING *
       `,
       [
@@ -40,6 +41,7 @@ const UserLogin = {
   user.mobile,
   password,
   "USER",
+  vendorId,
 ]
     );
 

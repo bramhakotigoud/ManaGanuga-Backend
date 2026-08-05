@@ -39,7 +39,11 @@ exports.verifyOtp = async (req, res) => {
   console.log("BODY:", req.body);
 
   try {
-    const { mobile, otp } = req.body;
+   const {
+  mobile,
+  otp,
+  vendorId,
+} = req.body;
 
     const result = verifyOtp(mobile, otp);
 
@@ -62,7 +66,11 @@ if (!loginUser) {
   // Generate 8-character password
   const randomPassword = Math.random().toString(36).slice(-8).toUpperCase();
 
-  await UserLogin.create(user, randomPassword);
+  await UserLogin.create(
+  user,
+  randomPassword,
+  vendorId
+);
 
   // Send password SMS (only if template ID is configured)
   const passwordMessage = `Welcome to Mana Ganuga.
