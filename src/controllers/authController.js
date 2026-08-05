@@ -135,10 +135,13 @@ exports.loginWithPassword = async (req, res) => {
     const token = generateToken(user);
 
     res.json({
-      message: "Login successful",
-      token,
-      user,
-    });
+  message: "Login successful",
+  token,
+  user: {
+    ...user,
+    role: loginUser.role,
+  },
+});
   } catch (err) {
     console.log("PASSWORD LOGIN ERROR:", err);
     res.status(500).json({
