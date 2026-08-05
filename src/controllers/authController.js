@@ -129,6 +129,7 @@ exports.loginWithPassword = async (req, res) => {
         message: "User not found",
       });
     }
+    user.role = loginUser.role;
 
     // Generate token
     const token = generateToken(user);
