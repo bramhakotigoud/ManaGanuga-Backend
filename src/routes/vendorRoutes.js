@@ -7,7 +7,12 @@ const {
 
 router.get(
   "/customers",
-  getCustomers
+  getCustomers,
+    getOrders,
+);
+router.get(
+  "/orders",
+  getOrders
 );
 
 module.exports = router;

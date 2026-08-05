@@ -24,7 +24,31 @@ const getCustomers = async (req, res) => {
   }
 
 };
+const getOrders = async (req, res) => {
+
+  try {
+
+    // Temporary vendor ID
+    // Later this will come from JWT
+    const vendorId = "100";
+
+    const orders = await Vendor.getOrders(vendorId);
+
+    res.json(orders);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: err.message,
+    });
+
+  }
+
+};
 
 module.exports = {
   getCustomers,
+    getOrders,
 };

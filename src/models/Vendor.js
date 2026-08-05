@@ -41,7 +41,51 @@ const getCustomers = async (vendorId) => {
   return result.rows;
 
 };
+const getOrders = async (vendorId) => {
+
+  const result = await pool.query(
+    `
+    SELECT
+
+      o.id,
+
+      ul.user_id,
+
+      ul.username,
+
+      ul.mobile_no,
+
+      o.total_amount,
+
+      o.status,
+
+      o.payment_status,
+
+      o.created_at
+
+    FROM orders o
+
+    INNER JOIN user_login ul
+      ON ul.user_id = o.user_id
+
+    WHERE
+
+      ul.created_by = $1
+
+      AND ul.role IN ('USER','CUSTOMER')
+
+    ORDER BY
+
+      o.created_at DESC;
+    `,
+    [vendorId]
+  );
+
+  return result.rows;
+
+};
 
 module.exports = {
   getCustomers,
+  getOrders,
 };
