@@ -1,5 +1,9 @@
 const Address = require("../models/Address");
 
+const {
+  getPincodeDetails: fetchPincodeDetails,
+} = require("../services/pincodeService");
+
 const addAddress = async (req, res) => {
   try {
     const address = await Address.createAddress(req.body);
@@ -27,6 +31,40 @@ const getAddresses = async (req, res) => {
       count: addresses.length,
       data: addresses,
     });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+const getPincodeDetails = async (req, res) => {
+  try {
+    const { pincode } = req.params;
+
+    if (!/^[0-9]{6}$/.test(pincode)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid pincode",
+      });
+    }
+
+    const data = await fetchPincodeDetails(pincode);
+
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: "Pincode not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+
   } catch (error) {
     console.error(error);
 
@@ -94,6 +132,7 @@ const deleteAddress = async (req, res) => {
 module.exports = {
   addAddress,
   getAddresses,
+  getPincodeDetails,
   updateAddress,
   deleteAddress,
 };
