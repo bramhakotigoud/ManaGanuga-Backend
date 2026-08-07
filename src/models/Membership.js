@@ -8,6 +8,7 @@ const createMembership = async ({
   discountPercent,
   monthlyClaim,
   expiryDate,
+  termsAndConditions = false,
 }) => {
   await pool.query(
   `
@@ -26,28 +27,30 @@ const createMembership = async ({
   const result = await pool.query(
     `
     INSERT INTO user_memberships
-    (
-      user_id,
-      plan_id,
-      payment_id,
-      wallet_balance,
-      discount_percent,
-      monthly_claim,
-      expiry_date
-    )
-    VALUES
-    ($1,$2,$3,$4,$5,$6,$7)
-    RETURNING *;
+(
+  user_id,
+  plan_id,
+  payment_id,
+  wallet_balance,
+  discount_percent,
+  monthly_claim,
+  expiry_date,
+  terms_and_conditions
+)
+VALUES
+($1,$2,$3,$4,$5,$6,$7,$8)
+RETURNING *;
     `,
-    [
-      userId,
-      planId,
-      paymentId,
-      walletBalance,
-      discountPercent,
-      monthlyClaim,
-      expiryDate,
-    ]
+   [
+  userId,
+  planId,
+  paymentId,
+  walletBalance,
+  discountPercent,
+  monthlyClaim,
+  expiryDate,
+  termsAndConditions,
+]
   );
 
   return result.rows[0];

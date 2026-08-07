@@ -215,6 +215,7 @@ if ((paymentType || "").toUpperCase() !== "MEMBERSHIP") {
       discountPercent: plan.discount_percentage,
       monthlyClaim: plan.monthly_claim,
       expiryDate,
+      termsAndConditions: true,
     });
 
     return res.json({
