@@ -184,11 +184,29 @@ async (userId) => {
   );
 
 };
+const acceptTerms = async (userId) => {
+  const result = await pool.query(
+    `
+    UPDATE membership
+    SET terms_conditions = TRUE
+    WHERE user_id = $1
+    RETURNING *
+    `,
+    [userId]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error("Membership not found for this user");
+  }
+
+  return result.rows[0];
+};
 
 module.exports = {
   createMembership,
   getActiveMembership,
   updateMembershipUsage,
+  acceptTerms,
   resetMonthlyBenefits,
   checkAndResetMonthlyBenefits,
 };
