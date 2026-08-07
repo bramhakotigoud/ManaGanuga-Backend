@@ -40,25 +40,26 @@ const getMyMembership = async (req, res) => {
     });
   }
 };
-const acceptSubscriptionTerms = async (req, res) => {
+const acceptMembershipTerms = async (req, res) => {
   try {
     const { userId } = req.body;
 
     if (!userId) {
       return res.status(400).json({
         success: false,
-        message: "User ID is required",
+        message: "userId is required",
       });
     }
 
-    await Membership.acceptTerms(userId);
+    const membership = await Membership.acceptTerms(userId);
 
     res.status(200).json({
       success: true,
       message: "Subscription terms accepted",
+      membership,
     });
   } catch (error) {
-    console.error("Accept Subscription Terms Error:", error);
+    console.error("Accept Membership Terms Error:", error);
 
     res.status(500).json({
       success: false,
@@ -66,7 +67,6 @@ const acceptSubscriptionTerms = async (req, res) => {
     });
   }
 };
-
 module.exports = {
   getSubscriptionPlans,
   getMyMembership,
