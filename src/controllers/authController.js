@@ -60,32 +60,66 @@ exports.verifyOtp = async (req, res) => {
 }
 
 const loginUser = await UserLogin.findByUserId(user.id);
+console.log("LOGIN USER CHECK:", loginUser);
 
+// if (!loginUser) {
+
+//   // Generate 8-character password
+//   const randomPassword = Math.random().toString(36).slice(-8).toUpperCase();
+
+//   await UserLogin.create(
+//   user,
+//   randomPassword,
+//   vendorId
+// );
+
+//   // Send password SMS (only if template ID is configured)
+//   const passwordMessage = `Welcome to Mana Ganuga.
+// Your login password is ${randomPassword}.
+// Please keep it secure.`;
+
+//   if (process.env.SMS_PASSWORD_TEMPLATE_ID) {
+//     await sendSMS(
+//       mobile,
+//       passwordMessage,
+//       process.env.SMS_PASSWORD_TEMPLATE_ID
+//     );
+//   } else {
+//     console.log("SMS_PASSWORD_TEMPLATE_ID not configured. Skipping password SMS.");
+//   }
+// }
 if (!loginUser) {
 
-  // Generate 8-character password
-  const randomPassword = Math.random().toString(36).slice(-8).toUpperCase();
+  // Generate 8-character initial password
+  const randomPassword = Math.random()
+    .toString(36)
+    .slice(-8)
+    .toUpperCase();
 
+  // Save user login with generated password
   await UserLogin.create(
-  user,
-  randomPassword,
-  vendorId
-);
+    user,
+    randomPassword,
+    vendorId
+  );
 
-  // Send password SMS (only if template ID is configured)
-  const passwordMessage = `Welcome to Mana Ganuga.
-Your login password is ${randomPassword}.
-Please keep it secure.`;
+  // Send initial password SMS using registered SMS template
+  const passwordMessage =
+    `We are delighted to have you with us. Your account for managanuga has been created successfully.\n` +
+    `User ID: ${user.id}\n` +
+    `Password: ${randomPassword}\n` +
+    `For your peace of mind, we recommend updating your password after your first login.\n` +
+    `managanuga`;
+    console.log("PASSWORD SMS TEMPLATE:", process.env.SMS_PASSWORD_TEMPLATE_ID);
+console.log("PASSWORD SMS MOBILE:", mobile);
+console.log("PASSWORD SMS USER ID:", user.id);
+console.log("PASSWORD SMS PASSWORD:", randomPassword);
 
-  if (process.env.SMS_PASSWORD_TEMPLATE_ID) {
-    await sendSMS(
-      mobile,
-      passwordMessage,
-      process.env.SMS_PASSWORD_TEMPLATE_ID
-    );
-  } else {
-    console.log("SMS_PASSWORD_TEMPLATE_ID not configured. Skipping password SMS.");
-  }
+  await sendSMS(
+    mobile,
+    passwordMessage,
+    process.env.SMS_PASSWORD_TEMPLATE_ID
+  );
 }
     const token = generateToken(user);
 

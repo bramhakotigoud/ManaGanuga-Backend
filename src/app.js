@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const vendorRoutes = require("./routes/vendorRoutes");
+const resellerRoutes = require("./routes/resellerRoutes");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const cartRoutes = require("./routes/cartRoutes");
@@ -22,5 +23,11 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/vendor", vendorRoutes);
+app.use("/api/reseller", resellerRoutes);
+app.get("/test", (req, res) => {
+res.json({
+    message: "Main app working"
+  });
+});
 
 module.exports = app;
