@@ -189,7 +189,7 @@ async (userId) => {
 const acceptTerms = async (userId) => {
   const result = await pool.query(
     `
-    UPDATE membership
+    UPDATE user_memberships
     SET terms_conditions = TRUE
     WHERE user_id = $1
     RETURNING *
@@ -203,6 +203,7 @@ const acceptTerms = async (userId) => {
 
   return result.rows[0];
 };
+
 module.exports = {
   createMembership,
   getActiveMembership,
