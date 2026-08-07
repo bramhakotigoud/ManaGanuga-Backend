@@ -11,6 +11,6 @@ router.get("/plans", getSubscriptionPlans);
 
 router.get("/my-membership", getMyMembership);
 
-router.post("/accept-terms", acceptMembershipTerms);
+router.put("/accept-terms", acceptSubscriptionTerms);
 
 module.exports = router;

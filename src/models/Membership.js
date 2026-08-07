@@ -184,6 +184,8 @@ async (userId) => {
   );
 
 };
+const pool = require("../../db");
+
 const acceptTerms = async (userId) => {
   const result = await pool.query(
     `
@@ -196,7 +198,7 @@ const acceptTerms = async (userId) => {
   );
 
   if (result.rows.length === 0) {
-    throw new Error("Membership not found for this user");
+    throw new Error("Membership record not found");
   }
 
   return result.rows[0];
