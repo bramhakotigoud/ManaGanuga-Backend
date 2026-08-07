@@ -190,7 +190,7 @@ const acceptTerms = async (userId) => {
   const result = await pool.query(
     `
     UPDATE user_memberships
-    SET terms_conditions = TRUE
+    SET terms_and_conditions = TRUE
     WHERE user_id = $1
     RETURNING *
     `,
