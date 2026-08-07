@@ -40,8 +40,37 @@ const getMyMembership = async (req, res) => {
     });
   }
 };
+const acceptMembershipTerms = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const membership =
+      await Membership.acceptTerms(userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Terms and conditions accepted",
+      membership,
+    });
+  } catch (error) {
+    console.error("Accept Membership Terms Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 module.exports = {
   getSubscriptionPlans,
   getMyMembership,
+  acceptMembershipTerms,
 };
