@@ -1,10 +1,11 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
   getSubscriptionPlans,
   getMyMembership,
-  acceptMembershipTerms,
+  acceptSubscriptionTerms,
 } = require("../controllers/subscriptionController");
 
 router.get("/plans", getSubscriptionPlans);

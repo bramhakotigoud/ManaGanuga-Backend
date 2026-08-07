@@ -1,4 +1,5 @@
 const Subscription = require("../models/Subscription");
+const Membership = require("../models/Membership");
 
 const getSubscriptionPlans = async (req, res) => {
   try {
@@ -17,7 +18,6 @@ const getSubscriptionPlans = async (req, res) => {
     });
   }
 };
-const Membership = require("../models/Membership");
 
 const getMyMembership = async (req, res) => {
   try {
@@ -30,7 +30,6 @@ const getMyMembership = async (req, res) => {
       success: true,
       membership,
     });
-
   } catch (error) {
     console.error("Get Membership Error:", error);
 
@@ -40,7 +39,8 @@ const getMyMembership = async (req, res) => {
     });
   }
 };
-const acceptMembershipTerms = async (req, res) => {
+
+const acceptSubscriptionTerms = async (req, res) => {
   try {
     const { userId } = req.body;
 
@@ -51,7 +51,8 @@ const acceptMembershipTerms = async (req, res) => {
       });
     }
 
-    const membership = await Membership.acceptTerms(userId);
+    const membership =
+      await Membership.acceptTerms(userId);
 
     res.status(200).json({
       success: true,
@@ -59,7 +60,7 @@ const acceptMembershipTerms = async (req, res) => {
       membership,
     });
   } catch (error) {
-    console.error("Accept Membership Terms Error:", error);
+    console.error("Accept Subscription Terms Error:", error);
 
     res.status(500).json({
       success: false,
@@ -67,8 +68,9 @@ const acceptMembershipTerms = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   getSubscriptionPlans,
   getMyMembership,
-  acceptMembershipTerms,
+  acceptSubscriptionTerms,
 };
