@@ -141,27 +141,74 @@ exports.loginWithPassword = async (req, res) => {
   try {
     const { mobile, password } = req.body;
 
-    if (!mobile || !password) {
-      return res.status(400).json({
-        message: "Mobile and password are required",
-      });
-    }
+if (!mobile || !password) {
+  return res.status(400).json({
+    message: "Mobile and password are required",
+  });
+}
 
-    // Find login record
-    const loginUser = await UserLogin.findByMobile(mobile);
+// Remove only accidental spaces at the beginning/end.
+// DO NOT change uppercase/lowercase.
+const cleanPassword = password.trim();
 
-    if (!loginUser) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
+console.log(
+  "PASSWORD FROM APP:",
+  JSON.stringify(password)
+);
 
-    // Verify password
-    if (loginUser.password !== password) {
-      return res.status(401).json({
-        message: "Invalid password",
-      });
-    }
+console.log(
+  "CLEAN PASSWORD:",
+  JSON.stringify(cleanPassword)
+);
+
+// Find login record
+const loginUser = await UserLogin.findByMobile(mobile);
+
+if (!loginUser) {
+  return res.status(404).json({
+    message: "User not found",
+  });
+}
+
+console.log(
+  "PASSWORD FROM DATABASE:",
+  JSON.stringify(loginUser.password)
+);
+
+console.log(
+  "PASSWORD MATCH:",
+  loginUser.password === cleanPassword
+);
+
+// Verify password
+if (loginUser.password !== cleanPassword) {
+  return res.status(401).json({
+    message: "Invalid password",
+  });
+}///changed 
+    // const { mobile, password } = req.body;
+
+    // if (!mobile || !password) {
+    //   return res.status(400).json({
+    //     message: "Mobile and password are required",
+    //   });
+    // }
+
+    // // Find login record
+    // const loginUser = await UserLogin.findByMobile(mobile);
+
+    // if (!loginUser) {
+    //   return res.status(404).json({
+    //     message: "User not found",
+    //   });
+    // }
+
+    // // Verify password
+    // if (loginUser.password !== password) {
+    //   return res.status(401).json({
+    //     message: "Invalid password",
+    //   });
+    // }
 
     // Find user
     const user = await User.findOne({ mobile });
