@@ -8,6 +8,7 @@ const {
   markAsRead,
   markAllAsRead,
   createTestNotification,
+    sendTestPushNotification,
 } = require("../controllers/notificationController");
 
 router.get("/", getNotifications);
@@ -20,5 +21,6 @@ router.put("/:id/read", markAsRead);
 
 // TEST ONLY
 router.post("/test", createTestNotification);
+router.post("/push-test", sendTestPushNotification);
 
 module.exports = router;

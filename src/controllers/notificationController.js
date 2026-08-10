@@ -1,4 +1,6 @@
 const Notification = require("../models/Notification");
+const pool = require("../../db");
+const { sendPushNotification } = require("../services/fcmService");
 
 // Get all notifications
 const getNotifications = async (req, res) => {
@@ -123,7 +125,6 @@ const markAllAsRead = async (req, res) => {
   }
 };
 
-// TEST ONLY - Create notification
 const createTestNotification = async (req, res) => {
   try {
     const {
@@ -141,6 +142,7 @@ const createTestNotification = async (req, res) => {
       });
     }
 
+    // 1️⃣ Save notification in database
     const notification =
       await Notification.createNotification({
         userId,
@@ -150,15 +152,116 @@ const createTestNotification = async (req, res) => {
         referenceId: referenceId || null,
       });
 
+    // 2️⃣ Get user's FCM token
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+        notification,
+      });
+    }
+
+    // 3️⃣ Send real push notification
+    let pushResult = null;
+
+    if (user.fcm_token) {
+      try {
+        pushResult = await sendPushNotification({
+          fcmToken: user.fcm_token,
+          title,
+          body: message,
+          data: {
+            notificationId: notification.id,
+            type: type || "GENERAL",
+          },
+        });
+
+        console.log(
+          "🔥 REAL PUSH SENT TO USER:",
+          userId
+        );
+      } catch (pushError) {
+        console.error(
+          "❌ FCM PUSH FAILED:",
+          pushError.message
+        );
+      }
+    } else {
+      console.log(
+        "⚠️ No FCM token for user:",
+        userId
+      );
+    }
+
     res.status(201).json({
       success: true,
       notification,
+      pushSent: !!pushResult,
     });
+
   } catch (error) {
     console.error(
       "Create Test Notification Error:",
       error
     );
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const sendTestPushNotification = async (req, res) => {
+  try {
+    const { userId, title, message } = req.body;
+
+    if (!userId || !title || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "userId, title and message are required",
+      });
+    }
+
+    const result = await pool.query(
+      "SELECT id, mobile, fcm_token FROM users WHERE id = $1",
+      [userId]
+    );
+
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (!user.fcm_token) {
+      return res.status(400).json({
+        success: false,
+        message: "User does not have an FCM token",
+      });
+    }
+
+    const firebaseResponse = await sendPushNotification({
+      fcmToken: user.fcm_token,
+      title,
+      body: message,
+      data: {
+        userId: user.id,
+        type: "TEST",
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Push notification sent successfully",
+      firebaseResponse,
+    });
+  } catch (error) {
+    console.error("Send Test Push Error:", error);
 
     res.status(500).json({
       success: false,
@@ -173,4 +276,5 @@ module.exports = {
   markAsRead,
   markAllAsRead,
   createTestNotification,
+  sendTestPushNotification,
 };
