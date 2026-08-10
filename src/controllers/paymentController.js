@@ -63,10 +63,8 @@ const {
       finalAmount,
     );
 
-    const razorpayAmount =
-  paymentTypeUpper === "MEMBERSHIP"
-    ? 1
-    : finalAmount;
+    // TEMPORARY TEST MODE
+const razorpayAmount = 1;
 
 const razorpayOrder =
   await razorpayService.createRazorpayOrder(
