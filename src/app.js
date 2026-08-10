@@ -12,6 +12,7 @@ const addressRoutes = require("./routes/addressRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 app.use(cors());
 app.use(express.json());
 
@@ -22,6 +23,7 @@ app.use("/api/address", addressRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/vendor", vendorRoutes);
 app.use("/api/reseller", resellerRoutes);
 app.get("/test", (req, res) => {
