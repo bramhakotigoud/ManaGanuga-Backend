@@ -122,6 +122,8 @@ const markAllAsRead = async (req, res) => {
     });
   }
 };
+
+// TEST ONLY - Create notification
 const createTestNotification = async (req, res) => {
   try {
     const {
@@ -153,7 +155,10 @@ const createTestNotification = async (req, res) => {
       notification,
     });
   } catch (error) {
-    console.error("Create Test Notification Error:", error);
+    console.error(
+      "Create Test Notification Error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -167,5 +172,5 @@ module.exports = {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
-    createTestNotification,
+  createTestNotification,
 };
