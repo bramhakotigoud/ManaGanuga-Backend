@@ -9,4 +9,5 @@ router.get("/test", (req, res) => {
 router.post("/send-otp", authController.sendOtp);
 router.post("/verify-otp", authController.verifyOtp);
 router.post("/login-password", authController.loginWithPassword);
+router.post("/fcm-token", authController.updateFcmToken);
 module.exports = router;

@@ -238,3 +238,42 @@ if (loginUser.password !== cleanPassword) {
     });
   }
 };
+// SAVE FCM TOKEN
+exports.updateFcmToken = async (req, res) => {
+  console.log("FCM TOKEN ROUTE HIT");
+  console.log("BODY:", req.body);
+
+  try {
+    const { userId, fcmToken } = req.body;
+
+    if (!userId || !fcmToken) {
+      return res.status(400).json({
+        success: false,
+        message: "userId and fcmToken are required",
+      });
+    }
+
+    const user = await User.updateFcmToken(userId, fcmToken);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "FCM token saved successfully",
+      user,
+    });
+
+  } catch (err) {
+    console.error("FCM TOKEN ERROR:", err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};

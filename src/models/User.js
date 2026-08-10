@@ -18,7 +18,23 @@ const create = async ({ mobile }) => {
   return result.rows[0];
 };
 
+// Save / update Firebase Cloud Messaging token
+const updateFcmToken = async (userId, fcmToken) => {
+  const result = await pool.query(
+    `
+    UPDATE users
+    SET fcm_token = $1
+    WHERE id = $2
+    RETURNING id, mobile, fcm_token
+    `,
+    [fcmToken, userId]
+  );
+
+  return result.rows[0];
+};
+
 module.exports = {
   findOne,
   create,
+  updateFcmToken,
 };
