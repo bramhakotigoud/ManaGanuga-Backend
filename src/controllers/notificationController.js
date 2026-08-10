@@ -1,5 +1,5 @@
 const Notification = require("../models/Notification");
-const pool = require("../../db");
+const User = require("../models/User");
 const { sendPushNotification } = require("../services/fcmService");
 
 // Get all notifications
@@ -142,7 +142,7 @@ const createTestNotification = async (req, res) => {
       });
     }
 
-    // 1️⃣ Save notification in database
+    // Save notification in database
     const notification =
       await Notification.createNotification({
         userId,
@@ -152,60 +152,41 @@ const createTestNotification = async (req, res) => {
         referenceId: referenceId || null,
       });
 
-    // 2️⃣ Get user's FCM token
+    // Get user's FCM token
     const user = await User.findById(userId);
 
-    if (!user) {
-      return res.status(404).json({
+    console.log("👤 User:", user);
+
+    if (!user?.fcm_token) {
+      return res.status(400).json({
         success: false,
-        message: "User not found",
+        message: "User does not have an FCM token",
         notification,
       });
     }
 
-    // 3️⃣ Send real push notification
-    let pushResult = null;
+    // 🔥 SEND REAL PUSH NOTIFICATION
+    const fcmResponse = await sendPushNotification({
+      fcmToken: user.fcm_token,
+      title,
+      body: message,
+      data: {
+        notificationId: notification.id,
+        type: type || "GENERAL",
+      },
+    });
 
-    if (user.fcm_token) {
-      try {
-        pushResult = await sendPushNotification({
-          fcmToken: user.fcm_token,
-          title,
-          body: message,
-          data: {
-            notificationId: notification.id,
-            type: type || "GENERAL",
-          },
-        });
-
-        console.log(
-          "🔥 REAL PUSH SENT TO USER:",
-          userId
-        );
-      } catch (pushError) {
-        console.error(
-          "❌ FCM PUSH FAILED:",
-          pushError.message
-        );
-      }
-    } else {
-      console.log(
-        "⚠️ No FCM token for user:",
-        userId
-      );
-    }
+    console.log("🔥 REAL PUSH SENT:", fcmResponse);
 
     res.status(201).json({
       success: true,
+      message: "Notification created and push sent",
       notification,
-      pushSent: !!pushResult,
+      fcmResponse,
     });
 
   } catch (error) {
-    console.error(
-      "Create Test Notification Error:",
-      error
-    );
+    console.error("❌ Create/Send Notification Error:", error);
 
     res.status(500).json({
       success: false,
