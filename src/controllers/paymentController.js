@@ -1,5 +1,6 @@
   const Order = require("../models/Order");
   const Payment = require("../models/Payment");
+  const Notification = require("../models/Notification");
   const razorpayService = require("../services/razorpayService");
   const Membership = require("../models/Membership");
   const pool = require("../../db");
@@ -229,37 +230,50 @@ if ((paymentType || "").toUpperCase() !== "MEMBERSHIP") {
 
   if (req.body.buyNow) {
 
-    order = await Order.createBuyNowOrder(
-      "USER",
-      1,
-      req.body.productId,
-      req.body.quantity || 1,
-    );
+  order = await Order.createBuyNowOrder(
+    "USER",
+    1,
+    req.body.productId,
+    req.body.quantity || 1,
+  );
 
-  } else {
+} else {
 
-    order = await Order.createOrder(
-      "USER",
-      1,
-    );
-    console.log("ORDER RETURNED:", order);
+  order = await Order.createOrder(
+    "USER",
+    1,
+  );
 
+  console.log("ORDER RETURNED:", order);
+}
+
+// Make sure order was created
 if (!order) {
   return res.status(400).json({
     success: false,
-    message: "Order.createOrder() returned null",
+    message: "Order creation failed",
   });
 }
 
-  }
-  const address = await Address.getDefaultAddress("USER", 1);
+// Create in-app notification
+try {
+  await Notification.createNotification({
+    userId,
+    title: "Order Placed Successfully",
+    message: `Your order #${order.id} has been placed successfully.`,
+    type: "ORDER_PLACED",
+    referenceId: order.id,
+  });
 
-  if (!address) {
-    return res.status(400).json({
-      success: false,
-      message: "Default delivery address not found.",
-    });
-  }
+  console.log(
+    `Notification created for order ${order.id}`
+  );
+} catch (notificationError) {
+  console.error(
+    "Order Notification Error:",
+    notificationError
+  );
+}
 
   let shipment;
 
