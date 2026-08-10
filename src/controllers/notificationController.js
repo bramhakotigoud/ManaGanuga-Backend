@@ -122,10 +122,50 @@ const markAllAsRead = async (req, res) => {
     });
   }
 };
+const createTestNotification = async (req, res) => {
+  try {
+    const {
+      userId,
+      title,
+      message,
+      type,
+      referenceId,
+    } = req.body;
+
+    if (!userId || !title || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "userId, title and message are required",
+      });
+    }
+
+    const notification =
+      await Notification.createNotification({
+        userId,
+        title,
+        message,
+        type: type || "GENERAL",
+        referenceId: referenceId || null,
+      });
+
+    res.status(201).json({
+      success: true,
+      notification,
+    });
+  } catch (error) {
+    console.error("Create Test Notification Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 module.exports = {
   getNotifications,
   getUnreadCount,
   markAsRead,
   markAllAsRead,
+    createTestNotification,
 };

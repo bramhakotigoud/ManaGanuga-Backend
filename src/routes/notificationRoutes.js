@@ -21,4 +21,7 @@ router.put("/:id/read", markAsRead);
 // Mark all notifications as read
 router.put("/read-all", markAllAsRead);
 
+// Create a test notification
+router.post("/", createTestNotification);
+
 module.exports = router;
