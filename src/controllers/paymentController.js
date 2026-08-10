@@ -161,6 +161,24 @@ const razorpayOrder =
         status: "PAID",
         gateway_payment_id: razorpay_payment_id,
       });
+      try {
+  await Notification.createNotification({
+    userId,
+    title: "Payment Successful",
+    message: "Your payment was successfully completed.",
+    type: "PAYMENT_SUCCESS",
+    referenceId: payment.id,
+  });
+
+  console.log(
+    `Payment notification created for payment ${payment.id}`
+  );
+} catch (notificationError) {
+  console.error(
+    "Payment Notification Error:",
+    notificationError
+  );
+}
 
       await Membership.checkAndResetMonthlyBenefits(
   userId,
