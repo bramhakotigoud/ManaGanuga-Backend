@@ -229,10 +229,15 @@ console.log("LOGIN USER CHECK:", loginUser);
 if (!loginUser) {
 
   // Generate 8-character initial password
-  const randomPassword = Math.random()
-    .toString(36)
-    .slice(-8)
-    .toUpperCase();
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+let randomPassword = "";
+
+for (let i = 0; i < 8; i++) {
+  randomPassword += chars.charAt(
+    Math.floor(Math.random() * chars.length)
+  );
+}
 
   // Save user login with generated password
   await UserLogin.create(
