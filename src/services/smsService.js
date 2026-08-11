@@ -2,6 +2,12 @@ const axios = require("axios");
 
 const sendSMS = async (mobile, message, templateId) => {
   try {
+    console.log("========== SMS REQUEST ==========");
+    console.log("Mobile:", mobile);
+    console.log("Template ID:", templateId);
+    console.log("Message:", message);
+    console.log("=================================");
+
     const response = await axios.get(process.env.SMS_BASE_URL, {
       params: {
         username: process.env.SMS_USERNAME,
@@ -13,13 +19,19 @@ const sendSMS = async (mobile, message, templateId) => {
       },
     });
 
-    console.log("SMS RESPONSE:");
-    console.log(response.data);
+    console.log("========== SMS RESPONSE ==========");
+    console.log("Status:", response.status);
+    console.log("Data:", response.data);
+    console.log("==================================");
 
     return response.data;
+
   } catch (error) {
-    console.log("SMS ERROR:");
-    console.log(error.response?.data || error.message);
+    console.log("========== SMS ERROR ==========");
+    console.log("Status:", error.response?.status);
+    console.log("Data:", error.response?.data);
+    console.log("Message:", error.message);
+    console.log("===============================");
 
     throw new Error("SMS sending failed");
   }
