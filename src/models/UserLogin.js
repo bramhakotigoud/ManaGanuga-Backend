@@ -104,6 +104,19 @@ const UserLogin = {
 
     return result.rows[0];
   },
+  async updatePassword(userId, newPassword) {
+  const result = await pool.query(
+    `
+    UPDATE user_login
+    SET password = $1
+    WHERE user_id = $2
+    RETURNING *
+    `,
+    [newPassword, userId]
+  );
+
+  return result.rows[0];
+},
 
 };
 

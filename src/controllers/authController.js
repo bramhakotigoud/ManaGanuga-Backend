@@ -32,6 +32,144 @@ if (loginUser) {
     res.status(500).json({ message: err.message });
   }
 };
+// FORGOT PASSWORD - SEND OTP
+exports.sendForgotPasswordOtp = async (req, res) => {
+  console.log("FORGOT PASSWORD OTP ROUTE HIT");
+  console.log("BODY:", req.body);
+
+  try {
+    const { mobile } = req.body;
+
+    if (!mobile) {
+      return res.status(400).json({
+        success: false,
+        message: "Mobile required",
+      });
+    }
+
+    // Check that this is an existing account
+    const loginUser = await UserLogin.findByMobile(mobile);
+
+    if (!loginUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Send OTP
+    await sendOtp(mobile);
+
+    res.json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+
+  } catch (err) {
+    console.error("FORGOT PASSWORD OTP ERROR:", err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+// FORGOT PASSWORD - VERIFY OTP AND RESET PASSWORD
+exports.resetPasswordWithOtp = async (req, res) => {
+  console.log("RESET PASSWORD ROUTE HIT");
+  console.log("BODY:", req.body);
+
+  try {
+    const { mobile, otp } = req.body;
+
+    if (!mobile || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Mobile and OTP are required",
+      });
+    }
+
+    // Verify OTP
+    const result = verifyOtp(mobile, otp);
+
+    console.log("RESET OTP RESULT:", result);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: result.message,
+      });
+    }
+
+    // Find existing login account
+    const loginUser = await UserLogin.findByMobile(mobile);
+
+    if (!loginUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User account not found",
+      });
+    }
+
+    // Generate new password
+    const newPassword = Math.random()
+      .toString(36)
+      .slice(-8)
+      .toUpperCase();
+
+    console.log(
+      "🔐 NEW PASSWORD GENERATED FOR USER:",
+      loginUser.user_id
+    );
+
+    // Update existing password
+    const updatedLoginUser =
+      await UserLogin.updatePassword(
+        loginUser.user_id,
+        newPassword
+      );
+
+    if (!updatedLoginUser) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update password",
+      });
+    }
+
+    // Send new password by SMS
+    const passwordMessage =
+      `We are delighted to have you with us. Your Mana Ganuga password has been reset successfully.\n` +
+      `User ID: ${loginUser.user_id}\n` +
+      `Password: ${newPassword}\n` +
+      `For your peace of mind, we recommend updating your password after login.\n` +
+      `managanuga`;
+
+    console.log(
+      "PASSWORD RESET SMS TEMPLATE:",
+      process.env.SMS_PASSWORD_TEMPLATE_ID
+    );
+
+    await sendSMS(
+      mobile,
+      passwordMessage,
+      process.env.SMS_PASSWORD_TEMPLATE_ID
+    );
+
+    res.json({
+      success: true,
+      message:
+        "Password reset successfully. New password sent by SMS.",
+    });
+
+  } catch (err) {
+    console.error("RESET PASSWORD ERROR:", err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
 /// VERIFY OTP + LOGIN
 exports.verifyOtp = async (req, res) => {
