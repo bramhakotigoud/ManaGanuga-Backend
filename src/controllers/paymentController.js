@@ -7,6 +7,8 @@
   const xpressbeesService = require("../services/xpressbeesService");
   const Address = require("../models/Address");
   const Cart = require("../models/Cart");
+  const User = require("../models/User");
+const { sendPushNotification } = require("../services/fcmService");
 const {
   calculateMembershipBenefits,
 } = require("../services/membershipCheckoutService");
@@ -271,9 +273,9 @@ if (!order) {
   });
 }
 
-// Create in-app notification
+// Create in-app notification + send real push notification
 try {
-  await Notification.createNotification({
+  const notification = await Notification.createNotification({
     userId,
     title: "Order Placed Successfully",
     message: `Your order #${order.id} has been placed successfully.`,
@@ -282,14 +284,44 @@ try {
   });
 
   console.log(
-    `Notification created for order ${order.id}`
+    `✅ Notification created for order ${order.id}`
   );
+
+  // Get user's FCM token
+  const user = await User.findById(userId);
+
+  console.log("👤 Order notification user:", user);
+
+  if (!user?.fcm_token) {
+    console.log(
+      "⚠️ User does not have an FCM token. Push not sent."
+    );
+  } else {
+    // 🔥 SEND REAL PUSH TO IPHONE
+    const fcmResponse = await sendPushNotification({
+      fcmToken: user.fcm_token,
+      title: "Order Placed Successfully",
+      body: `Your order #${order.id} has been placed successfully.`,
+      data: {
+        notificationId: notification.id,
+        orderId: order.id,
+        type: "ORDER_PLACED",
+      },
+    });
+
+    console.log(
+      "🔥 ORDER PUSH SENT:",
+      fcmResponse
+    );
+  }
+
 } catch (notificationError) {
   console.error(
-    "Order Notification Error:",
+    "❌ Order Notification/Push Error:",
     notificationError
   );
 }
+
 
   let shipment;
 
