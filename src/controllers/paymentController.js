@@ -12,6 +12,9 @@ const { sendPushNotification } = require("../services/fcmService");
 const {
   calculateMembershipBenefits,
 } = require("../services/membershipCheckoutService");
+const {
+  processMembershipBenefit,
+} = require("../services/membershipBenefitService");
  
   /* CREATE ORDER */
   const createOrder = async (req, res) => {
@@ -226,17 +229,88 @@ if ((paymentType || "").toUpperCase() !== "MEMBERSHIP") {
     const expiryDate = new Date();
     expiryDate.setFullYear(expiryDate.getFullYear() + 1);
 
-    const membership = await Membership.createMembership({
-      userId,
-      planId: plan.id,
-      paymentId: payment.id,
-      walletBalance: plan.wallet_bonus,
-      discountPercent: plan.discount_percentage,
-      monthlyClaim: plan.monthly_claim,
-      expiryDate,
-      termsAndConditions: true,
-    });
+    // Get customer's subscription assignment
+const assignmentResult = await pool.query(
+  `
+  SELECT
+    u.id AS numeric_user_id,
+    u.mobile,
+    ul.user_id AS login_user_id,
+    ul.role,
+    ul.created_by,
+    ul.assigned_by
+  FROM users u
+  LEFT JOIN user_login ul
+    ON ul.mobile_no = u.mobile
+  WHERE u.id = $1
+  LIMIT 1
+  `,
+  [userId]
+);
 
+const customer = assignmentResult.rows[0];
+
+if (!customer) {
+  return res.status(404).json({
+    success: false,
+    message: "Customer account not found",
+  });
+}
+
+const assignedBy =
+  customer.assigned_by || customer.created_by || null;
+
+let assignedRole = null;
+
+if (assignedBy) {
+  const assignedUserResult = await pool.query(
+    `
+    SELECT role
+    FROM user_login
+    WHERE user_id = $1
+    LIMIT 1
+    `,
+    [assignedBy]
+  );
+
+  assignedRole =
+    assignedUserResult.rows[0]?.role || null;
+}
+
+console.log("===== MEMBERSHIP ASSIGNMENT =====");
+console.log("Customer numeric ID:", customer.numeric_user_id);
+console.log("Customer login ID:", customer.login_user_id);
+console.log("Assigned By:", assignedBy);
+console.log("Assigned Role:", assignedRole);
+
+// Create membership
+const membership = await Membership.createMembership({
+  userId,
+  planId: plan.id,
+  paymentId: payment.id,
+  walletBalance: plan.wallet_bonus,
+  discountPercent: plan.discount_percentage,
+  monthlyClaim: plan.monthly_claim,
+  expiryDate,
+  termsAndConditions: true,
+  assignedBy,
+  assignedRole,
+});
+
+// Process Vendor / Reseller benefit
+const membershipBenefits =
+  await processMembershipBenefit({
+    membershipId: membership.id,
+    customerId: customer.login_user_id,
+    assignedBy,
+    assignedRole,
+    subscriptionAmount: Number(plan.plan_price),
+  });
+
+console.log(
+  "===== MEMBERSHIP WALLET BENEFITS ====="
+);
+console.log(membershipBenefits);
     return res.json({
       success: true,
       payment,
