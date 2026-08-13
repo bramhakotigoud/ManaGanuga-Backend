@@ -354,25 +354,22 @@ if (loginUser.password !== cleanPassword) {
     // }
 
     // Find user
-    const user = await User.findOne({ mobile });
+   // Build authenticated user from PostgreSQL user_login record
+const user = {
+  id: loginUser.user_id,
+  user_id: loginUser.user_id,
+  username: loginUser.username,
+  mobile: loginUser.mobile_no,
+  role: loginUser.role,
+};
 
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-    user.role = loginUser.role;
+// Generate token
+const token = generateToken(user);
 
-    // Generate token
-    const token = generateToken(user);
-
-    res.json({
+res.json({
   message: "Login successful",
   token,
-  user: {
-    ...user,
-    role: loginUser.role,
-  },
+  user,
 });
   } catch (err) {
     console.log("PASSWORD LOGIN ERROR:", err);
