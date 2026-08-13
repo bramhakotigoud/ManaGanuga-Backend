@@ -1,3 +1,4 @@
+const pool = require("../../db");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 const { sendPushNotification } = require("../services/fcmService");
@@ -206,11 +207,23 @@ const sendTestPushNotification = async (req, res) => {
     }
 
     const result = await pool.query(
-      "SELECT id, mobile, fcm_token FROM users WHERE id = $1",
+      `
+      SELECT
+        user_id,
+        username,
+        mobile_no,
+        role,
+        fcm_token
+      FROM user_login
+      WHERE user_id = $1
+      LIMIT 1
+      `,
       [userId]
     );
 
     const user = result.rows[0];
+
+    console.log("👤 Notification User:", user);
 
     if (!user) {
       return res.status(404).json({
@@ -231,18 +244,21 @@ const sendTestPushNotification = async (req, res) => {
       title,
       body: message,
       data: {
-        userId: user.id,
+        userId: user.user_id,
         type: "TEST",
       },
     });
+
+    console.log("🔥 TEST PUSH SENT:", firebaseResponse);
 
     res.status(200).json({
       success: true,
       message: "Push notification sent successfully",
       firebaseResponse,
     });
+
   } catch (error) {
-    console.error("Send Test Push Error:", error);
+    console.error("❌ Send Test Push Error:", error);
 
     res.status(500).json({
       success: false,
@@ -250,7 +266,6 @@ const sendTestPushNotification = async (req, res) => {
     });
   }
 };
-
 module.exports = {
   getNotifications,
   getUnreadCount,

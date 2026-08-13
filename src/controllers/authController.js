@@ -200,32 +200,6 @@ exports.verifyOtp = async (req, res) => {
 const loginUser = await UserLogin.findByUserId(user.id);
 console.log("LOGIN USER CHECK:", loginUser);
 
-// if (!loginUser) {
-
-//   // Generate 8-character password
-//   const randomPassword = Math.random().toString(36).slice(-8).toUpperCase();
-
-//   await UserLogin.create(
-//   user,
-//   randomPassword,
-//   vendorId
-// );
-
-//   // Send password SMS (only if template ID is configured)
-//   const passwordMessage = `Welcome to Mana Ganuga.
-// Your login password is ${randomPassword}.
-// Please keep it secure.`;
-
-//   if (process.env.SMS_PASSWORD_TEMPLATE_ID) {
-//     await sendSMS(
-//       mobile,
-//       passwordMessage,
-//       process.env.SMS_PASSWORD_TEMPLATE_ID
-//     );
-//   } else {
-//     console.log("SMS_PASSWORD_TEMPLATE_ID not configured. Skipping password SMS.");
-//   }
-// }
 if (!loginUser) {
 
   // Generate 8-character initial password
@@ -328,31 +302,7 @@ if (loginUser.password !== cleanPassword) {
   return res.status(401).json({
     message: "Invalid password",
   });
-}///changed 
-    // const { mobile, password } = req.body;
-
-    // if (!mobile || !password) {
-    //   return res.status(400).json({
-    //     message: "Mobile and password are required",
-    //   });
-    // }
-
-    // // Find login record
-    // const loginUser = await UserLogin.findByMobile(mobile);
-
-    // if (!loginUser) {
-    //   return res.status(404).json({
-    //     message: "User not found",
-    //   });
-    // }
-
-    // // Verify password
-    // if (loginUser.password !== password) {
-    //   return res.status(401).json({
-    //     message: "Invalid password",
-    //   });
-    // }
-
+}
     // Find user
    // Build authenticated user from PostgreSQL user_login record
 const user = {
@@ -393,7 +343,7 @@ exports.updateFcmToken = async (req, res) => {
       });
     }
 
-    const user = await User.updateFcmToken(userId, fcmToken);
+    const user = await UserLogin.updateFcmToken(userId, fcmToken);
 
     if (!user) {
       return res.status(404).json({
