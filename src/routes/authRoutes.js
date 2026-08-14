@@ -21,4 +21,5 @@ router.post(
 
 router.post("/login-password", authController.loginWithPassword);
 router.post("/fcm-token", authController.updateFcmToken);
+router.post("/update-name", authController.updateUsername);
 module.exports = router;

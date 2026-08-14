@@ -201,8 +201,10 @@ const loginUser = await UserLogin.findByUserId(user.id);
 console.log("LOGIN USER CHECK:", loginUser);
 
 let createdLoginUser = null;
+let requiresName = false;
 
 if (!loginUser) {
+  requiresName = true;
 
   // Generate 8-character initial password
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -249,6 +251,7 @@ const authenticatedUser = {
   username: authenticatedLoginUser.username,
   mobile: authenticatedLoginUser.mobile_no,
   role: authenticatedLoginUser.role,
+  requiresName,
 };
 
 const token = generateToken(authenticatedUser);
@@ -257,6 +260,7 @@ res.json({
   message: "Login successful",
   token,
   user: authenticatedUser,
+  requiresName: !!createdLoginUser,
 });
   } catch (err) {
     console.log("VERIFY ERROR:", err);
@@ -373,6 +377,50 @@ exports.updateFcmToken = async (req, res) => {
 
   } catch (err) {
     console.error("FCM TOKEN ERROR:", err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+// UPDATE USERNAME
+exports.updateUsername = async (req, res) => {
+  console.log("UPDATE USERNAME ROUTE HIT");
+  console.log("BODY:", req.body);
+
+  try {
+    const { userId, username } = req.body;
+
+    if (!userId || !username || !username.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID and name are required",
+      });
+    }
+
+    const cleanUsername = username.trim();
+
+    const updatedUser = await UserLogin.updateUsername(
+      userId,
+      cleanUsername
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Name updated successfully",
+      user: updatedUser,
+    });
+
+  } catch (err) {
+    console.error("UPDATE USERNAME ERROR:", err);
 
     res.status(500).json({
       success: false,

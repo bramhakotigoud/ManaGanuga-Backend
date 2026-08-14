@@ -78,6 +78,19 @@ const UserLogin = {
 
   return result.rows[0];
 },
+async updateUsername(userId, username) {
+  const result = await pool.query(
+    `
+    UPDATE user_login
+    SET username = $1
+    WHERE user_id = $2
+    RETURNING user_id, username, mobile_no, role
+    `,
+    [username, userId]
+  );
+
+  return result.rows[0];
+},
 
 };
 
