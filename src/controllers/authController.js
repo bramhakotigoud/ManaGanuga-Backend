@@ -200,6 +200,8 @@ exports.verifyOtp = async (req, res) => {
 const loginUser = await UserLogin.findByUserId(user.id);
 console.log("LOGIN USER CHECK:", loginUser);
 
+let createdLoginUser = null;
+
 if (!loginUser) {
 
   // Generate 8-character initial password
@@ -214,11 +216,11 @@ for (let i = 0; i < 8; i++) {
 }
 
   // Save user login with generated password
-  await UserLogin.create(
-    user,
-    randomPassword,
-    vendorId
-  );
+  createdLoginUser = await UserLogin.create(
+  user,
+  randomPassword,
+  vendorId
+);
 
   // Send initial password SMS using registered SMS template
   const passwordMessage =
@@ -238,13 +240,24 @@ console.log("PASSWORD SMS PASSWORD:", randomPassword);
     process.env.SMS_PASSWORD_TEMPLATE_ID
   );
 }
-    const token = generateToken(user);
+    const authenticatedLoginUser =
+  loginUser || createdLoginUser;
 
-    res.json({
-      message: "Login successful",
-      token,
-      user,
-    });
+const authenticatedUser = {
+  id: authenticatedLoginUser.user_id,
+  user_id: authenticatedLoginUser.user_id,
+  username: authenticatedLoginUser.username,
+  mobile: authenticatedLoginUser.mobile_no,
+  role: authenticatedLoginUser.role,
+};
+
+const token = generateToken(authenticatedUser);
+
+res.json({
+  message: "Login successful",
+  token,
+  user: authenticatedUser,
+});
   } catch (err) {
     console.log("VERIFY ERROR:", err);
     res.status(500).json({ message: err.message });
