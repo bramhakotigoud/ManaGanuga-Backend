@@ -34,6 +34,27 @@ const {
   (paymentType || "ORDER").toUpperCase();
 
     let finalAmount = amount;
+    if (paymentTypeUpper === "MEMBERSHIP") {
+  const planResult = await pool.query(
+    `
+    SELECT plan_price
+    FROM subscription_plans
+    WHERE id = $1
+    `,
+    [membershipPlanId]
+  );
+
+  const plan = planResult.rows[0];
+
+  if (!plan) {
+    return res.status(404).json({
+      success: false,
+      message: "Membership plan not found",
+    });
+  }
+
+  finalAmount = Number(plan.plan_price);
+}
 
     // Membership discount only for normal product orders
     if (paymentTypeUpper !== "MEMBERSHIP") {
@@ -68,8 +89,8 @@ const {
       finalAmount,
     );
 
-    // TEMPORARY TEST MODE
-const razorpayAmount = 1;
+    
+const razorpayAmount = Number(finalAmount);
 
 const razorpayOrder =
   await razorpayService.createRazorpayOrder(
