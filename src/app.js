@@ -14,6 +14,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const legalContentRoutes = require("./routes/legalContentRoutes");
 app.use(cors());
 app.use(express.json());
 
@@ -28,6 +29,7 @@ app.use("/api/wallet", walletRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/vendor", vendorRoutes);
 app.use("/api/reseller", resellerRoutes);
+app.use("/api/legal", legalContentRoutes);
 app.get("/test", (req, res) => {
 res.json({
     message: "Main app working"
