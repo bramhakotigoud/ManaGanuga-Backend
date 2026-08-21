@@ -22,6 +22,10 @@ router.post(
   "/forgot-password/verify-otp",
   authController.verifyForgotPasswordOtp
 );
+router.post(
+  "/change-password",
+  authController.changePassword
+);
 
 router.post("/login-password", authController.loginWithPassword);
 router.post("/fcm-token", authController.updateFcmToken);

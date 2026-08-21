@@ -482,3 +482,89 @@ exports.verifyForgotPasswordOtp = async (req, res) => {
     });
   }
 };
+// CHANGE PASSWORD
+exports.changePassword = async (req, res) => {
+  console.log("CHANGE PASSWORD ROUTE HIT");
+  console.log("BODY:", req.body);
+
+  try {
+    const {
+      userId,
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    } = req.body;
+
+    if (
+      !userId ||
+      !currentPassword ||
+      !newPassword ||
+      !confirmPassword
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All password fields are required",
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New passwords do not match",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters",
+      });
+    }
+
+    const loginUser = await UserLogin.findByUserId(userId);
+
+    if (!loginUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User account not found",
+      });
+    }
+
+    if (loginUser.password !== currentPassword.trim()) {
+      return res.status(401).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    const updatedUser = await UserLogin.updatePassword(
+      userId,
+      newPassword
+    );
+
+    if (!updatedUser) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update password",
+      });
+    }
+
+    console.log(
+      "PASSWORD CHANGED SUCCESSFULLY FOR USER:",
+      userId
+    );
+
+    return res.json({
+      success: true,
+      message: "Password changed successfully",
+    });
+
+  } catch (error) {
+    console.error("CHANGE PASSWORD ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
