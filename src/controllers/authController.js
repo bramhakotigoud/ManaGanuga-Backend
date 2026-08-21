@@ -1,4 +1,10 @@
-const { sendOtp, verifyOtp } = require("../services/otpService");
+const {
+  sendOtp,
+  verifyOtp,
+  markForgotPasswordVerified,
+  isForgotPasswordVerified,
+  clearForgotPasswordVerified,
+} = require("../services/otpService");
 const User = require("../models/User");
 const UserLogin = require("../models/UserLogin");
 const generateToken = require("../utils/generateToken");
@@ -112,16 +118,17 @@ exports.resetPasswordWithOtp = async (req, res) => {
     }
 
     // Verify OTP
-    const result = verifyOtp(mobile, otp);
+  // Check that the OTP was already verified
+const verified = isForgotPasswordVerified(mobile);
 
-    console.log("RESET OTP RESULT:", result);
+if (!verified) {
+  return res.status(400).json({
+    success: false,
+    message: "OTP verification required",
+  });
+}
 
-    if (!result.success) {
-      return res.status(400).json({
-        success: false,
-        message: result.message,
-      });
-    }
+  
 
     // Find existing login account
     const loginUser = await UserLogin.findByMobile(mobile);
@@ -146,6 +153,7 @@ exports.resetPasswordWithOtp = async (req, res) => {
         message: "Failed to update password",
       });
     }
+    clearForgotPasswordVerified(mobile);
 
     console.log(
       "PASSWORD RESET SUCCESSFUL FOR USER:",
@@ -448,6 +456,7 @@ exports.verifyForgotPasswordOtp = async (req, res) => {
         message: result.message,
       });
     }
+    markForgotPasswordVerified(mobile);
 
     // Confirm account still exists
     const loginUser = await UserLogin.findByMobile(mobile);
