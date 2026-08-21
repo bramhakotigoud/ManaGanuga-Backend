@@ -80,12 +80,34 @@ exports.resetPasswordWithOtp = async (req, res) => {
   console.log("BODY:", req.body);
 
   try {
-    const { mobile, otp } = req.body;
+    const {
+      mobile,
+      otp,
+      newPassword,
+      confirmPassword,
+    } = req.body;
 
-    if (!mobile || !otp) {
+    if (!mobile || !otp || !newPassword || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Mobile and OTP are required",
+        message:
+          "Mobile, OTP, new password and confirm password are required",
+      });
+    }
+
+    // Check password match
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    // Minimum password length
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
       });
     }
 
@@ -111,18 +133,7 @@ exports.resetPasswordWithOtp = async (req, res) => {
       });
     }
 
-    // Generate new password
-    const newPassword = Math.random()
-      .toString(36)
-      .slice(-8)
-      .toUpperCase();
-
-    console.log(
-      "🔐 NEW PASSWORD GENERATED FOR USER:",
-      loginUser.user_id
-    );
-
-    // Update existing password
+    // Update password chosen by the user
     const updatedLoginUser =
       await UserLogin.updatePassword(
         loginUser.user_id,
@@ -136,35 +147,20 @@ exports.resetPasswordWithOtp = async (req, res) => {
       });
     }
 
-    // Send new password by SMS
-    const passwordMessage =
-      `We are delighted to have you with us. Your Mana Ganuga password has been reset successfully.\n` +
-      `User ID: ${loginUser.user_id}\n` +
-      `Password: ${newPassword}\n` +
-      `For your peace of mind, we recommend updating your password after login.\n` +
-      `managanuga`;
-
     console.log(
-      "PASSWORD RESET SMS TEMPLATE:",
-      process.env.SMS_PASSWORD_TEMPLATE_ID
+      "PASSWORD RESET SUCCESSFUL FOR USER:",
+      loginUser.user_id
     );
 
-    await sendSMS(
-      mobile,
-      passwordMessage,
-      process.env.SMS_PASSWORD_TEMPLATE_ID
-    );
-
-    res.json({
+    return res.json({
       success: true,
-      message:
-        "Password reset successfully. New password sent by SMS.",
+      message: "Password reset successfully",
     });
 
   } catch (err) {
     console.error("RESET PASSWORD ERROR:", err);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: err.message,
     });
@@ -423,6 +419,55 @@ exports.updateUsername = async (req, res) => {
     console.error("UPDATE USERNAME ERROR:", err);
 
     res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+exports.verifyForgotPasswordOtp = async (req, res) => {
+  console.log("VERIFY FORGOT PASSWORD OTP ROUTE HIT");
+  console.log("BODY:", req.body);
+
+  try {
+    const { mobile, otp } = req.body;
+
+    if (!mobile || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Mobile and OTP are required",
+      });
+    }
+
+    const result = verifyOtp(mobile, otp);
+
+    console.log("FORGOT PASSWORD OTP RESULT:", result);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: result.message,
+      });
+    }
+
+    // Confirm account still exists
+    const loginUser = await UserLogin.findByMobile(mobile);
+
+    if (!loginUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User account not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+
+  } catch (err) {
+    console.error("VERIFY FORGOT PASSWORD OTP ERROR:", err);
+
+    return res.status(500).json({
       success: false,
       message: err.message,
     });
