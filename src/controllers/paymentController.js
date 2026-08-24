@@ -372,6 +372,26 @@ if (!order) {
     message: "Order creation failed",
   });
 }
+const addressResult = await pool.query(
+  `
+  SELECT *
+  FROM addresses
+  WHERE id = $1
+    AND entity_type = 'USER'
+    AND entity_id = $2
+  LIMIT 1
+  `,
+  [address_id, userId]
+);
+
+const address = addressResult.rows[0];
+
+if (!address) {
+  return res.status(400).json({
+    success: false,
+    message: "Delivery address not found",
+  });
+}
 
 // Create in-app notification + send real push notification
 try {
