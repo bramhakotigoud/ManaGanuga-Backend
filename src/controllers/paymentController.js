@@ -162,14 +162,18 @@ const razorpayOrder =
   /* VERIFY PAYMENT */
   const verifyPayment = async (req, res) => {
     try {
-      const { 
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        paymentType,
-        membershipPlanId,
-        userId,
-        } =req.body;
+      const {
+  razorpay_order_id,
+  razorpay_payment_id,
+  razorpay_signature,
+  paymentType,
+  membershipPlanId,
+  userId,
+  address_id,
+  buyNow,
+  productId,
+  quantity,
+} = req.body;
 
       const isValid = razorpayService.verifyPaymentSignature(
         razorpay_order_id,
@@ -341,23 +345,24 @@ console.log(membershipBenefits);
 
   }
 
-  if (req.body.buyNow) {
+if (buyNow) {
 
   order = await Order.createBuyNowOrder(
     "USER",
-    1,
-    req.body.productId,
-    req.body.quantity || 1,
+    userId,
+    address_id,
+    productId,
+    quantity || 1,
   );
 
 } else {
 
   order = await Order.createOrder(
     "USER",
-    1,
+    userId,
+    address_id,
   );
 
-  console.log("ORDER RETURNED:", order);
 }
 
 // Make sure order was created
