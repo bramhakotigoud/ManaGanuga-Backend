@@ -121,7 +121,16 @@ const deleteAddress = async (req, res) => {
       data: address,
     });
   } catch (error) {
-    console.error(error);
+    console.error("DELETE ADDRESS ERROR:", error);
+
+    // PostgreSQL foreign-key violation
+    if (error.code === "23503") {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This address is linked to an existing order and cannot be deleted.",
+      });
+    }
 
     res.status(500).json({
       success: false,
