@@ -1,7 +1,11 @@
 const Order = require("../models/Order");
+const {
+  sendOrderConfirmation,
+} = require("../services/whatsappService");
 const xpressbeesService = require("../services/xpressbeesService");
 const createOrder = async (req, res) => {
   console.log("ORDER BODY:", req.body);
+
   try {
     const {
       entity_type,
@@ -10,8 +14,9 @@ const createOrder = async (req, res) => {
       buyNow,
       productId,
       quantity,
-      tracking_number
+      tracking_number,
     } = req.body;
+
     const order = await Order.createOrder(
       entity_type,
       entity_id,
@@ -20,6 +25,7 @@ const createOrder = async (req, res) => {
       productId,
       quantity
     );
+
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -27,13 +33,48 @@ const createOrder = async (req, res) => {
       });
     }
 
-    res.status(201).json({
+    // --------------------------------
+    // SEND WHATSAPP ORDER CONFIRMATION
+    // --------------------------------
+    try {
+      const orderDetails = await Order.getOrderById(order.id);
+      const orderItems = await Order.getOrderItems(order.id);
+
+      const productNames = orderItems
+        .map((item) => `${item.product_name} x${item.quantity}`)
+        .join(", ");
+
+      if (orderDetails?.phone) {
+        await sendOrderConfirmation({
+          mobile: orderDetails.phone,
+          orderId: order.id,
+          products: productNames,
+          amount: order.total_amount,
+        });
+      } else {
+        console.log(
+          "WhatsApp skipped: customer mobile number not found."
+        );
+      }
+    } catch (whatsappError) {
+      // IMPORTANT:
+      // WhatsApp failure must NOT fail the order.
+      console.error(
+        "WHATSAPP ORDER CONFIRMATION FAILED:",
+        whatsappError.message
+      );
+    }
+
+    return res.status(201).json({
       success: true,
       message: "Order created successfully",
       data: order,
     });
+
   } catch (error) {
-    res.status(500).json({
+    console.error("CREATE ORDER ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
