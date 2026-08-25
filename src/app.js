@@ -15,6 +15,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const legalContentRoutes = require("./routes/legalContentRoutes");
+const userDocumentRoutes = require("./routes/userDocumentRoutes");
 app.use(cors());
 app.use(express.json());
 
@@ -22,6 +23,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/address", addressRoutes);
+app.use("/api/user-documents", userDocumentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
