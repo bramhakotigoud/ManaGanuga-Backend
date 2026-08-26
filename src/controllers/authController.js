@@ -275,7 +275,7 @@ exports.verifyOtp = async (req, res) => {
     const passwordMessage =
       `We are delighted to have you with us. Your account for managanuga has been created successfully.\n` +
       `User ID: ${createdLoginUser.mobile_no}\n` +
-      `Password: ${randomPassword}\n` +
+      `Password: ${randomPassword}\n` + 
       `For your peace of mind, we recommend updating your password after your first login.\n` +
       `managanuga`;
 
