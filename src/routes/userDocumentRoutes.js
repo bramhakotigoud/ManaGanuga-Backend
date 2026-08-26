@@ -1,9 +1,11 @@
 const express = require("express");
+
 const multer = require("multer");
 
 const {
   uploadProfileImage,
   getProfileImage,
+  deleteProfileImage,
 } = require("../controllers/userDocumentController");
 
 const router = express.Router();
@@ -25,9 +27,10 @@ router.get(
   "/profile/:userId",
   getProfileImage
 );
+
 router.delete(
   "/profile-image",
-  userDocumentController.deleteProfileImage
+  deleteProfileImage
 );
 
 module.exports = router;
