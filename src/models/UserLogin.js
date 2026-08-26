@@ -40,10 +40,57 @@ const UserLogin = {
     return result.rows[0];
   },
 
+async create(mobile, password, createdBy = null) {
+  const client = await pool.connect();
 
-  async create(user, password, createdBy) {
+  try {
+    await client.query("BEGIN");
 
-    const result = await pool.query(
+    // Prevent simultaneous registrations from generating
+    // the same user ID.
+    await client.query(
+      `SELECT pg_advisory_xact_lock(hashtext($1))`,
+      ["MGU_USER_ID"]
+    );
+
+    // Generate YYMMDD
+    // Example: 26 August 2026 -> 260826
+    const dateResult = await client.query(`
+      SELECT TO_CHAR(CURRENT_DATE, 'YYMMDD') AS date_code
+    `);
+
+    const dateCode = dateResult.rows[0].date_code;
+    const prefix = `MGU${dateCode}`;
+
+    // Find the highest sequence for today
+    const sequenceResult = await client.query(
+      `
+      SELECT COALESCE(
+        MAX(
+          CAST(RIGHT(user_id, 2) AS INTEGER)
+        ),
+        0
+      ) AS last_sequence
+      FROM user_login
+      WHERE user_id LIKE $1
+      `,
+      [`${prefix}%`]
+    );
+
+    const nextSequence =
+      Number(sequenceResult.rows[0].last_sequence) + 1;
+
+    if (nextSequence > 99) {
+      throw new Error(
+        "Daily user registration limit exceeded"
+      );
+    }
+
+    const sequence = String(nextSequence).padStart(2, "0");
+
+    const userId = `${prefix}${sequence}`;
+
+    const result = await client.query(
       `
       INSERT INTO user_login
       (
@@ -60,17 +107,29 @@ const UserLogin = {
       RETURNING *
       `,
       [
-        user.id,
-        user.mobile,
-        user.mobile,
+        userId,
+        mobile,
+        mobile,
         password,
         "USER",
-        createdBy
+        createdBy,
       ]
     );
 
+    await client.query("COMMIT");
+
     return result.rows[0];
-  },
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+
+  } finally {
+    client.release();
+  }
+},
+  
+
   async updatePassword(userId, newPassword) {
   const result = await pool.query(
     `

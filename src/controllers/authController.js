@@ -175,115 +175,164 @@ if (!verified) {
   }
 };
 
-/// VERIFY OTP + LOGIN
+// VERIFY OTP + LOGIN
 exports.verifyOtp = async (req, res) => {
   console.log("VERIFY OTP ROUTE HIT");
   console.log("BODY:", req.body);
 
   try {
-   const {
-  mobile,
-  otp,
-  vendorId,
-} = req.body;
+    const {
+      mobile,
+      otp,
+      vendorId,
+    } = req.body;
 
+    if (!mobile || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Mobile and OTP are required",
+      });
+    }
+
+    // Verify OTP first
     const result = verifyOtp(mobile, otp);
 
     console.log("VERIFY RESULT:", result);
 
     if (!result.success) {
-      return res.status(400).json({ message: result.message });
+      return res.status(400).json({
+        success: false,
+        message: result.message,
+      });
     }
 
-  // Find existing user by mobile
-let user = await User.findOne({ mobile });
+    // Check for an ACTIVE account only.
+    const loginUser = await UserLogin.findByMobile(mobile);
 
-// If the existing account was deleted/deactivated,
-// create a completely new user account.
-if (user && user.is_active === false) {
-  console.log(
-    "INACTIVE ACCOUNT FOUND. CREATING NEW ACCOUNT FOR MOBILE:",
-    mobile
-  );
+    console.log("ACTIVE LOGIN USER:", loginUser);
 
-  user = await User.create({ mobile });
-}
+    // --------------------------------------------------
+    // EXISTING ACTIVE USER
+    // --------------------------------------------------
+    if (loginUser) {
+      const authenticatedUser = {
+        id: loginUser.user_id,
+        user_id: loginUser.user_id,
+        username: loginUser.username,
+        mobile: loginUser.mobile_no,
+        role: loginUser.role,
+        requiresName: false,
+      };
 
-// If no account exists, create a new account
-if (!user) {
-  user = await User.create({ mobile });
-}
+      const token = generateToken(authenticatedUser);
 
-const loginUser = await UserLogin.findByUserId(user.id);
-console.log("LOGIN USER CHECK:", loginUser);
+      return res.json({
+        message: "Login successful",
+        token,
+        user: authenticatedUser,
+        requiresName: false,
+      });
+    }
 
-let createdLoginUser = null;
-let requiresName = false;
+    // --------------------------------------------------
+    // NEW USER / PREVIOUSLY DELETED USER
+    // --------------------------------------------------
 
-if (!loginUser) {
-  requiresName = true;
+    const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
-  // Generate 8-character initial password
-  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    let randomPassword = "";
 
-let randomPassword = "";
+    for (let i = 0; i < 8; i++) {
+      randomPassword += chars.charAt(
+        Math.floor(Math.random() * chars.length)
+      );
+    }
 
-for (let i = 0; i < 8; i++) {
-  randomPassword += chars.charAt(
-    Math.floor(Math.random() * chars.length)
-  );
-}
+    // Create new user_login record.
+    // UserLogin.create() now generates:
+    // MGUYYMMDD01
+    // MGUYYMMDD02
+    // etc.
+    const createdLoginUser = await UserLogin.create(
+      mobile,
+      randomPassword,
+      vendorId
+    );
 
-  // Save user login with generated password
-  createdLoginUser = await UserLogin.create(
-  user,
-  randomPassword,
-  vendorId
-);
+    console.log(
+      "NEW USER CREATED:",
+      createdLoginUser
+    );
 
-  // Send initial password SMS using registered SMS template
-  const passwordMessage =
-    `We are delighted to have you with us. Your account for managanuga has been created successfully.\n` +
-    `User ID: ${user.id}\n` +
-    `Password: ${randomPassword}\n` +
-    `For your peace of mind, we recommend updating your password after your first login.\n` +
-    `managanuga`;
-    console.log("PASSWORD SMS TEMPLATE:", process.env.SMS_PASSWORD_TEMPLATE_ID);
-console.log("PASSWORD SMS MOBILE:", mobile);
-console.log("PASSWORD SMS USER ID:", user.id);
-console.log("PASSWORD SMS PASSWORD:", randomPassword);
+    if (!createdLoginUser) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create user account",
+      });
+    }
 
-  await sendSMS(
-    mobile,
-    passwordMessage,
-    process.env.SMS_PASSWORD_TEMPLATE_ID
-  );
-}
-    const authenticatedLoginUser =
-  loginUser || createdLoginUser;
+    // Send initial password SMS
+    const passwordMessage =
+      `We are delighted to have you with us. Your account for managanuga has been created successfully.\n` +
+      `User ID: ${createdLoginUser.user_id}\n` +
+      `Password: ${randomPassword}\n` +
+      `For your peace of mind, we recommend updating your password after your first login.\n` +
+      `managanuga`;
 
-const authenticatedUser = {
-  id: authenticatedLoginUser.user_id,
-  user_id: authenticatedLoginUser.user_id,
-  username: authenticatedLoginUser.username,
-  mobile: authenticatedLoginUser.mobile_no,
-  role: authenticatedLoginUser.role,
-  requiresName,
-};
+    console.log(
+      "PASSWORD SMS TEMPLATE:",
+      process.env.SMS_PASSWORD_TEMPLATE_ID
+    );
 
-const token = generateToken(authenticatedUser);
+    console.log(
+      "PASSWORD SMS MOBILE:",
+      mobile
+    );
 
-res.json({
-  message: "Login successful",
-  token,
-  user: authenticatedUser,
-  requiresName: !!createdLoginUser,
-});
+    console.log(
+      "PASSWORD SMS USER ID:",
+      createdLoginUser.user_id
+    );
+
+    console.log(
+      "PASSWORD SMS PASSWORD:",
+      randomPassword
+    );
+
+    await sendSMS(
+      mobile,
+      passwordMessage,
+      process.env.SMS_PASSWORD_TEMPLATE_ID
+    );
+
+    const authenticatedUser = {
+      id: createdLoginUser.user_id,
+      user_id: createdLoginUser.user_id,
+      username: createdLoginUser.username,
+      mobile: createdLoginUser.mobile_no,
+      role: createdLoginUser.role,
+      requiresName: true,
+    };
+
+    const token = generateToken(authenticatedUser);
+
+    return res.json({
+      message: "Login successful",
+      token,
+      user: authenticatedUser,
+      requiresName: true,
+    });
+
   } catch (err) {
     console.log("VERIFY ERROR:", err);
-    res.status(500).json({ message: err.message });
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
+
 // LOGIN WITH PASSWORD
 exports.loginWithPassword = async (req, res) => {
   console.log("PASSWORD LOGIN ROUTE HIT");
@@ -583,7 +632,7 @@ exports.changePassword = async (req, res) => {
 };
 exports.deleteAccount = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const {userId} = req.body;
 
     if (!userId) {
       return res.status(400).json({
@@ -592,26 +641,27 @@ exports.deleteAccount = async (req, res) => {
       });
     }
 
-    const user = await User.deactivateAccount(userId);
+    const deletedUser =
+      await UserLogin.deactivateAccount(userId);
 
-    if (!user) {
+    if (!deletedUser) {
       return res.status(404).json({
         success: false,
         message: "Active account not found",
       });
     }
 
-    // Clear FCM token from user_login as well
-    await UserLogin.clearFcmToken(userId);
-    await UserLogin.deactivateAccount(userId);
-
     return res.status(200).json({
       success: true,
       message: "Account deleted successfully",
+      data: deletedUser,
     });
 
   } catch (error) {
-    console.error("DELETE ACCOUNT ERROR:", error);
+    console.error(
+      "DELETE ACCOUNT ERROR:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
