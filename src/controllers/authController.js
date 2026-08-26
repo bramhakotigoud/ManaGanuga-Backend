@@ -485,12 +485,23 @@ exports.updateUsername = async (req, res) => {
       user: updatedUser,
     });
 
-  } catch (err) {
+   } catch (err) {
     console.error("UPDATE USERNAME ERROR:", err);
 
-    res.status(500).json({
+    // Duplicate username
+    if (
+      err.code === "23505" &&
+      err.constraint === "user_login_username_key"
+    ) {
+      return res.status(409).json({
+        success: false,
+        message: "This name is already registered. Please choose a different name.",
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Unable to update your name. Please try again.",
     });
   }
 };
