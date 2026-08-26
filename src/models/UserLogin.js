@@ -13,13 +13,19 @@ const UserLogin = {
 
 
   async findByMobile(mobile) {
-    const result = await pool.query(
-      `SELECT * FROM user_login WHERE mobile_no = $1 LIMIT 1`,
-      [mobile]
-    );
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM user_login
+    WHERE mobile_no = $1
+      AND is_active = true
+    LIMIT 1
+    `,
+    [mobile]
+  );
 
-    return result.rows[0];
-  },
+  return result.rows[0];
+},
     async updateFcmToken(userId, fcmToken) {
     const result = await pool.query(
       `
@@ -91,7 +97,33 @@ async updateUsername(userId, username) {
 
   return result.rows[0];
 },
+async clearFcmToken(userId) {
+  const result = await pool.query(
+    `
+    UPDATE user_login
+    SET fcm_token = NULL
+    WHERE user_id = $1
+    RETURNING user_id, fcm_token
+    `,
+    [userId]
+  );
 
+  return result.rows[0];
+},
+async deactivateAccount(userId) {
+  const result = await pool.query(
+    `
+    UPDATE user_login
+    SET is_active = false
+    WHERE user_id = $1
+    RETURNING user_id, mobile_no, is_active
+    `,
+    [userId]
+  );
+
+  return result.rows[0];
+},
 };
+
 
 module.exports = UserLogin;

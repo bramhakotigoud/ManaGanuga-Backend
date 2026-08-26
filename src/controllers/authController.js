@@ -195,9 +195,22 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: result.message });
     }
 
-    let user = await User.findOne({ mobile });
+  // Find existing user by mobile
+let user = await User.findOne({ mobile });
 
-   if (!user) {
+// If the existing account was deleted/deactivated,
+// create a completely new user account.
+if (user && user.is_active === false) {
+  console.log(
+    "INACTIVE ACCOUNT FOUND. CREATING NEW ACCOUNT FOR MOBILE:",
+    mobile
+  );
+
+  user = await User.create({ mobile });
+}
+
+// If no account exists, create a new account
+if (!user) {
   user = await User.create({ mobile });
 }
 
@@ -565,6 +578,44 @@ exports.changePassword = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+exports.deleteAccount = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const user = await User.deactivateAccount(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Active account not found",
+      });
+    }
+
+    // Clear FCM token from user_login as well
+    await UserLogin.clearFcmToken(userId);
+    await UserLogin.deactivateAccount(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Account deleted successfully",
+    });
+
+  } catch (error) {
+    console.error("DELETE ACCOUNT ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete account",
     });
   }
 };

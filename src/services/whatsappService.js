@@ -1,6 +1,5 @@
 const PINBOT_PHONE_NUMBER_ID =
   process.env.PINBOT_PHONE_NUMBER_ID;
-
 const PINBOT_API_URL =
   `https://partnersv1.pinbot.ai/v3/${PINBOT_PHONE_NUMBER_ID}/messages`;
 

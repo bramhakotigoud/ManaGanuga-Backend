@@ -30,4 +30,5 @@ router.post(
 router.post("/login-password", authController.loginWithPassword);
 router.post("/fcm-token", authController.updateFcmToken);
 router.post("/update-name", authController.updateUsername);
+router.post("/delete-account", authController.deleteAccount);
 module.exports = router;
