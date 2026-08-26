@@ -25,5 +25,9 @@ router.get(
   "/profile/:userId",
   getProfileImage
 );
+router.delete(
+  "/profile-image",
+  userDocumentController.deleteProfileImage
+);
 
 module.exports = router;

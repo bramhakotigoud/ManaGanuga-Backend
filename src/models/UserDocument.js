@@ -110,9 +110,35 @@ const getProfileImage = async (userId) => {
 
   return result.rows[0];
 };
+const deleteProfileImage = async (userId) => {
+  const query = `
+    UPDATE user_documents
+    SET
+      profile_image = NULL,
+      updated_at = CURRENT_TIMESTAMP,
+      updated_by = $2
+    WHERE user_id = $1
+      AND is_active = true
+      AND profile_image IS NOT NULL
+    RETURNING
+      id,
+      user_id,
+      updated_at,
+      updated_by,
+      is_active;
+  `;
+
+  const result = await pool.query(query, [
+    userId,
+    userId,
+  ]);
+
+  return result.rows[0];
+};
 
 module.exports = {
   getUserDocument,
   createOrUpdateProfileImage,
   getProfileImage,
+   deleteProfileImage,
 };
