@@ -97,26 +97,19 @@ async updateUsername(userId, username) {
 
   return result.rows[0];
 },
-async clearFcmToken(userId) {
-  const result = await pool.query(
-    `
-    UPDATE user_login
-    SET fcm_token = NULL
-    WHERE user_id = $1
-    RETURNING user_id, fcm_token
-    `,
-    [userId]
-  );
 
-  return result.rows[0];
-},
 async deactivateAccount(userId) {
   const result = await pool.query(
     `
     UPDATE user_login
-    SET is_active = false
+    SET
+      is_active = false,
+      deleted_at = CURRENT_TIMESTAMP,
+      deleted_by = $1,
+      fcm_token = NULL
     WHERE user_id = $1
-    RETURNING user_id, mobile_no, is_active
+      AND is_active = true
+    RETURNING user_id, mobile_no, is_active, deleted_at, deleted_by;
     `,
     [userId]
   );

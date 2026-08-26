@@ -39,28 +39,11 @@ const updateFcmToken = async (userId, fcmToken) => {
 
   return result.rows[0];
 };
-const deactivateAccount = async (userId) => {
-  const result = await pool.query(
-    `
-    UPDATE users
-    SET
-      is_active = false,
-      deleted_at = CURRENT_TIMESTAMP,
-      deleted_by = $1
-    WHERE id = $1
-      AND is_active = true
-    RETURNING id, mobile, is_active, deleted_at, deleted_by;
-    `,
-    [userId]
-  );
 
-  return result.rows[0];
-};
 
 module.exports = {
   findOne,
   findById,
   create,
   updateFcmToken,
-  deactivateAccount,
 };
