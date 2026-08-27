@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const pool = require("../../db");
 
 const getVariantsByProductId = async (productId) => {
   const result = await pool.query(
