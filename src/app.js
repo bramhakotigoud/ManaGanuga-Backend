@@ -7,6 +7,7 @@ const resellerRoutes = require("./routes/resellerRoutes");
 const authRoutes = require("./routes/authRoutes");
 const walletRoutes = require("./routes/walletRoutes");
 const productRoutes = require("./routes/productRoutes");
+const productReviewRoutes = require("./routes/productReviewRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const app = express();
 const addressRoutes = require("./routes/addressRoutes");
@@ -16,11 +17,13 @@ const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const legalContentRoutes = require("./routes/legalContentRoutes");
 const userDocumentRoutes = require("./routes/userDocumentRoutes");
+
 app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/products", productReviewRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/user-documents", userDocumentRoutes);
