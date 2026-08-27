@@ -215,14 +215,15 @@ exports.verifyOtp = async (req, res) => {
     // EXISTING ACTIVE USER
     // --------------------------------------------------
     if (loginUser) {
-      const authenticatedUser = {
-        id: loginUser.user_id,
-        user_id: loginUser.user_id,
-        username: loginUser.username,
-        mobile: loginUser.mobile_no,
-        role: loginUser.role,
-        requiresName: false,
-      };
+     const authenticatedUser = { 
+  id: loginUser.user_id, 
+  user_id: loginUser.user_id, 
+  login_id: loginUser.id,
+  username: loginUser.username, 
+  mobile: loginUser.mobile_no, 
+  role: loginUser.role, 
+  requiresName: false, 
+};
 
       const token = generateToken(authenticatedUser);
 
@@ -305,14 +306,15 @@ exports.verifyOtp = async (req, res) => {
       process.env.SMS_PASSWORD_TEMPLATE_ID
     );
 
-    const authenticatedUser = {
-      id: createdLoginUser.user_id,
-      user_id: createdLoginUser.user_id,
-      username: createdLoginUser.username,
-      mobile: createdLoginUser.mobile_no,
-      role: createdLoginUser.role,
-      requiresName: true,
-    };
+   const authenticatedUser = { 
+  id: createdLoginUser.user_id, 
+  user_id: createdLoginUser.user_id, 
+  login_id: createdLoginUser.id,
+  username: createdLoginUser.username, 
+  mobile: createdLoginUser.mobile_no, 
+  role: createdLoginUser.role, 
+  requiresName: true, 
+};
 
     const token = generateToken(authenticatedUser);
 
@@ -388,12 +390,13 @@ if (loginUser.password !== cleanPassword) {
 }
     // Find user
    // Build authenticated user from PostgreSQL user_login record
-const user = {
-  id: loginUser.user_id,
-  user_id: loginUser.user_id,
-  username: loginUser.username,
-  mobile: loginUser.mobile_no,
-  role: loginUser.role,
+const user = { 
+  id: loginUser.user_id, 
+  user_id: loginUser.user_id, 
+  login_id: loginUser.id,
+  username: loginUser.username, 
+  mobile: loginUser.mobile_no, 
+  role: loginUser.role, 
 };
 
 // Generate token
