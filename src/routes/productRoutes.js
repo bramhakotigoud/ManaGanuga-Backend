@@ -1,3 +1,6 @@
+const {
+  getVariantsByProductId,
+} = require("../controllers/productVariantController");
 const express = require("express");
 const router = express.Router();
 
@@ -10,7 +13,7 @@ const {
 } = require("../controllers/productController");
 
 router.get("/", getProducts);
-
+router.get("/:productId/variants", getVariantsByProductId);
 router.get("/:id", getProductById);
 router.post("/", createProduct);
 router.put("/:id", updateProduct);
