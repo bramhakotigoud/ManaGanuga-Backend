@@ -30,6 +30,29 @@ const {
       paymentType,
       membershipPlanId,
     } = req.body;
+    let resolvedEntityId = entity_id;
+
+if (typeof entity_id === "string" && entity_id.startsWith("MGU")) {
+  const userResult = await pool.query(
+    `
+    SELECT id
+    FROM user_login
+    WHERE user_id = $1
+      AND is_active = true
+    LIMIT 1
+    `,
+    [entity_id]
+  );
+
+  if (!userResult.rows[0]) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  resolvedEntityId = userResult.rows[0].id;
+}
     const paymentTypeUpper =
   (paymentType || "ORDER").toUpperCase();
 
@@ -59,16 +82,16 @@ const {
     // Membership discount only for normal product orders
     if (paymentTypeUpper !== "MEMBERSHIP") {
 
-      const cartItems = await Cart.getItems(
-        "USER",
-        entity_id,
-      );
+    const cartItems = await Cart.getItems(
+  "USER",
+  resolvedEntityId,
+);
 
-      const benefits =
-        await calculateMembershipBenefits(
-          entity_id,
-          cartItems,
-        );
+const benefits =
+  await calculateMembershipBenefits(
+    resolvedEntityId,
+    cartItems,
+  );
 
       if (benefits) {
 
@@ -174,6 +197,31 @@ const razorpayOrder =
   productId,
   quantity,
 } = req.body;
+let resolvedUserId = userId;
+
+if (typeof userId === "string" && userId.startsWith("MGU")) {
+  const userResult = await pool.query(
+    `
+    SELECT u.id
+    FROM users u
+    JOIN user_login ul
+      ON ul.mobile_no = u.mobile
+    WHERE ul.user_id = $1
+      AND ul.is_active = true
+    LIMIT 1
+    `,
+    [userId]
+  );
+
+  if (!userResult.rows[0]) {
+    return res.status(404).json({
+      success: false,
+      message: "User account not found",
+    });
+  }
+
+  resolvedUserId = userResult.rows[0].id;
+}
 
       const isValid = razorpayService.verifyPaymentSignature(
         razorpay_order_id,
@@ -193,7 +241,7 @@ const razorpayOrder =
       });
       try {
   await Notification.createNotification({
-    userId,
+      userId: resolvedUserId,
     title: "Payment Successful",
     message: "Your payment was successfully completed.",
     type: "PAYMENT_SUCCESS",
@@ -210,23 +258,23 @@ const razorpayOrder =
   );
 }
 
-      await Membership.checkAndResetMonthlyBenefits(
-  userId,
+await Membership.checkAndResetMonthlyBenefits(
+  resolvedUserId,
 );
       let membershipBenefits = null;
 
 if ((paymentType || "").toUpperCase() !== "MEMBERSHIP") {
 
-  const cartItems = await Cart.getItems(
-    "USER",
-    userId,
-  );
+ const cartItems = await Cart.getItems(
+  "USER",
+  resolvedUserId,
+);
 
   membershipBenefits =
-    await calculateMembershipBenefits(
-      userId,
-      cartItems,
-    );
+  await calculateMembershipBenefits(
+    resolvedUserId,
+    cartItems,
+  );
 
 }
       let order;
@@ -270,7 +318,7 @@ const assignmentResult = await pool.query(
   WHERE u.id = $1
   LIMIT 1
   `,
-  [userId]
+  [resolvedUserId]
 );
 
 const customer = assignmentResult.rows[0];
@@ -310,7 +358,7 @@ console.log("Assigned Role:", assignedRole);
 
 // Create membership
 const membership = await Membership.createMembership({
-  userId,
+    userId: resolvedUserId,
   planId: plan.id,
   paymentId: payment.id,
   walletBalance: plan.wallet_bonus,
@@ -349,7 +397,7 @@ if (buyNow) {
 
   order = await Order.createBuyNowOrder(
     "USER",
-    userId,
+    resolvedUserId,
     address_id,
     productId,
     quantity || 1,
@@ -359,7 +407,7 @@ if (buyNow) {
 
   order = await Order.createOrder(
     "USER",
-    userId,
+     resolvedUserId,
     address_id,
   );
 
@@ -381,7 +429,7 @@ const addressResult = await pool.query(
     AND entity_id = $2
   LIMIT 1
   `,
-  [address_id, userId]
+  [address_id, resolvedUserId]
 );
 
 const address = addressResult.rows[0];
@@ -396,7 +444,7 @@ if (!address) {
 // Create in-app notification + send real push notification
 try {
   const notification = await Notification.createNotification({
-    userId,
+   userId: resolvedUserId,
     title: "Order Placed Successfully",
     message: `Your order #${order.id} has been placed successfully.`,
     type: "ORDER_PLACED",
@@ -408,7 +456,7 @@ try {
   );
 
   // Get user's FCM token
-  const user = await User.findById(userId);
+  const user = await User.findById(resolvedUserId);
 
   console.log("👤 Order notification user:", user);
 
@@ -470,7 +518,7 @@ if (
 
   await Membership.updateMembershipUsage({
 
-    userId,
+      userId: resolvedUserId,
 
     litresUsed:
       membershipBenefits.totalLitres,
@@ -557,20 +605,48 @@ shipment = await xpressbeesService.createShipment({
   const checkoutSummary = async (req, res) => {
 
   try {
+const { entity_id } = req.body;
 
-    const { entity_id } = req.body;
+let resolvedEntityId = entity_id;
 
-    const cartItems =
-      await Cart.getItems(
-        "USER",
-        entity_id,
-      );
+if (
+  typeof entity_id === "string" &&
+  entity_id.startsWith("MGU")
+) {
+  const userResult = await pool.query(
+  `
+  SELECT u.id
+  FROM users u
+  JOIN user_login ul
+    ON ul.mobile_no = u.mobile
+  WHERE ul.user_id = $1
+    AND ul.is_active = true
+  LIMIT 1
+  `,
+  [entity_id]
+);
 
-    const benefits =
-      await calculateMembershipBenefits(
-        entity_id,
-        cartItems,
-      );
+  if (!userResult.rows[0]) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  resolvedEntityId = userResult.rows[0].id;
+}
+
+const cartItems =
+  await Cart.getItems(
+    "USER",
+    resolvedEntityId,
+  );
+
+const benefits =
+  await calculateMembershipBenefits(
+    resolvedEntityId,
+    cartItems,
+  );
 
     return res.json({
 
