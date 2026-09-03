@@ -17,12 +17,13 @@ const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const legalContentRoutes = require("./routes/legalContentRoutes");
 const userDocumentRoutes = require("./routes/userDocumentRoutes");
-
+const eventPosterRoutes = require("./routes/eventPosterRoutes");
 app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/event-posters", eventPosterRoutes);
 app.use("/api/products", productReviewRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/address", addressRoutes);
