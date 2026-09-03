@@ -20,18 +20,18 @@ const getActiveEventPoster = async (req, res) => {
 
 const createEventPoster = async (req, res) => {
   try {
-    const {image, ended_date} = req.body;
+    const {image_url, ended_at} = req.body;
 
-    if (!image || !ended_date) {
+    if (!image_url || !ended_at) {
       return res.status(400).json({
         success: false,
-        message: "image and ended_date are required",
+        message: "image_url and ended_at are required",
       });
     }
 
     const poster = await EventPoster.createEventPoster(
-      image,
-      ended_date,
+      image_url,
+      ended_at,
     );
 
     return res.status(201).json({
